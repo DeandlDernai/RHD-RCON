@@ -16,7 +16,7 @@ Built with love by Deandl.
 
 ## Download
 
-See the [Releases](https://github.com/DeandlDernai/Resthirn-RCON/releases) page for the latest EXE.
+See the [Releases](https://github.com/DeandlDernai/RHD-RCON/releases) page for the latest EXE.
 
 ## Support development
 
