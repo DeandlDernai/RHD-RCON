@@ -1,0 +1,101 @@
+name: Bug Report
+description: Report something that isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report. The more concrete you are,
+        the better the chance the bug actually gets fixed.
+
+        **Before you post:** never paste secrets - no RCon passwords, no Steam
+        Web API key, no MySQL credentials. Redact them in logs and screenshots.
+
+        If you walked through TESTPLAN.md or TESTPLAN_SERVER.md, please
+        reference the section number (e.g. "2.3 step 4 was [-]") so it's
+        clear which step broke.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the actual behaviour you observed.
+      placeholder: Right-click -> Ban opened the dialog but the server status dot stayed grey...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      placeholder: The ban should have been applied and the player kicked.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can someone else trigger this? Be as exact as you can.
+      placeholder: |
+        1. Connect to server X
+        2. Right-click player Y -> Ban
+        3. Set duration 0, reason "test", confirm
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: RHD-RCON version
+      description: Shown in the title bar and in the startup line of logs/app-YYYYMMDD.log.
+      placeholder: "1.0.2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Mode
+      options:
+        - Client mode
+        - Server mode
+    validations:
+      required: true
+
+  - type: input
+    id: windows-version
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 / Windows Server 2022 / ...
+    validations:
+      required: true
+
+  - type: input
+    id: server-count
+    attributes:
+      label: How many servers are configured / connected?
+      placeholder: e.g. 1 configured, 1 connected
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log excerpts
+      description: |
+        Lines from logs/app-YYYYMMDD.log around the time of the problem.
+        If Debug log is enabled, logs/debug/RHD-RCON_Debug_YYYY-MM-DD.log can help too.
+        REDACT any secrets first (RCon password, API keys, MySQL credentials).
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Additional context, screenshots, ideas about the cause.
+    validations:
+      required: false

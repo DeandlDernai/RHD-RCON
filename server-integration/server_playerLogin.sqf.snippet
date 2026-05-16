@@ -1,0 +1,13 @@
+// ============================================================================
+// RHD-RCON - call the login-log hook on every successful login
+//
+// Add this ONE call to your `dayz_server\compile\server_playerLogin.sqf`,
+// AFTER the player record is built (Name, UID and CharacterID must be set).
+//
+// Good insertion point: right after the existing
+//   [_playerID,_charID,2, ...] call dayz_recordLogin;
+// line (stock Epoch is around line 193).
+// ============================================================================
+
+// Log login into extDB player_login_log
+[_playerName, _playerID, str _charID] call rh_logPlayerLogin;

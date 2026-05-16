@@ -1,0 +1,48 @@
+name: Feature Request / Question
+description: Suggest an idea or ask a question about RHD-RCON
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For ideas, questions or anything that isn't a bug.
+
+        Heads up: this is a one-person side project maintained in spare time.
+        See PLANNED.md for what's already on the roadmap. No promises on if
+        or when something gets implemented, but well-described ideas are welcome.
+
+  - type: textarea
+    id: request
+    attributes:
+      label: What would you like, or what is your question?
+      placeholder: It would be useful if the scheduler could send messages only to a specific side...
+    validations:
+      required: true
+
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Why? What is the use case?
+      description: What problem does this solve for you?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Which mode does this affect?
+      options:
+        - Client mode
+        - Server mode
+        - Both
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Additional context, examples, references.
+    validations:
+      required: false

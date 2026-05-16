@@ -1,0 +1,53 @@
+RHD-RCON - License
+
+Copyright (c) 2026 DeandlDernai
+
+All rights reserved.
+
+This repository distributes the compiled Windows binary (RHD-RCON*.exe)
+together with documentation, configuration snippets, integration scripts
+and other supporting files (collectively, "the Software"). The source
+code of the application itself is not public at this time.
+
+Permission is granted, free of charge, to any person obtaining a copy
+of the Software, to use the Software for any purpose, including
+commercial use, subject to the following conditions:
+
+1. Redistribution
+
+   You may redistribute the unmodified compiled binary and the
+   accompanying documentation and integration files, in original form,
+   provided that this license file and all copyright notices are
+   included.
+
+2. No derivative works of the binary
+
+   You may not modify, reverse engineer, decompile, disassemble or
+   otherwise attempt to derive the source code of the compiled binary,
+   except to the extent that such activity is expressly permitted by
+   applicable law notwithstanding this limitation.
+
+3. Server-side integration files
+
+   The files in the `server-integration/` directory (SQL schema, extDB3
+   protocol snippet, SQF hook and accompanying snippets) may be copied,
+   modified and adapted as needed to integrate them into your own DayZ
+   Epoch server. You are not required to share back any local
+   modifications.
+
+4. No warranty
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+   CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+5. Future change of license
+
+   The author reserves the right to release the source code of RHD-RCON
+   under a different, more permissive license at a later point in time.
+   Such a future release does not retroactively change the terms
+   applicable to copies distributed under this license.
