@@ -1,0 +1,23 @@
+;; ============================================================================
+;; RHD-RCON - player_login_log extDB3 protocol block
+;;
+;; Append this block to your existing `@extDB/sql_custom/shared-conf.ini`.
+;; The [Default] section at the top of that file stays as it is - only add
+;; the [playerLoginLog] block below it.
+;; ============================================================================
+
+;; +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+;;                PLAYER LOGIN LOGGING (SHARED DB)
+;; +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+;; ---------------------------------------------------------------------------
+;; Writes one row per player login into player_login_log (cross-server).
+;; Parameters: PlayerName, PlayerUID, CharacterID
+;; ---------------------------------------------------------------------------
+[playerLoginLog]
+
+SQL1_1 = INSERT INTO player_login_log
+SQL1_2 = (PlayerName, PlayerUID, CharacterID, LoginTime)
+SQL1_3 = VALUES (?, ?, ?, CURRENT_TIMESTAMP);
+
+SQL1_INPUTS = 1,2,3

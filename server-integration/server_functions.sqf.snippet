@@ -1,0 +1,11 @@
+// ============================================================================
+// RHD-RCON - register the login-log hook
+//
+// Add this ONE line to your `dayz_server\init\server_functions.sqf`, next
+// to the other `compile preprocessFileLineNumbers` lines for custom hooks.
+//
+// In the stock Epoch layout this section is roughly around line 100, where
+// other rh_* compile registrations already live.
+// ============================================================================
+
+rh_logPlayerLogin = compile preprocessFileLineNumbers "\z\addons\dayz_server\compile\custom\rh_logPlayerLogin.sqf";

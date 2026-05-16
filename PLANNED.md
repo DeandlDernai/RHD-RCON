@@ -1,70 +1,85 @@
-# RHD-RCON - Feature Backlog & Roadmap
+# Roadmap / Planned Features
 
-> Geplante Features + UI-Verbesserungen für zukünftige Versionen.
-> Diese Features sind nach aktuellen Fixes + Public-Release v1.0.2 geplant.
+> Planned features and UI improvements for future versions.
+>
+> Items here are not commitments - they are ideas the project owner finds
+> useful and intends to work on as time permits. Feedback and feature
+> requests are welcome via [GitHub Issues](https://github.com/DeandlDernai/RHD-RCON/issues).
 
-## UI-Verbesserungen (High Priority)
+## UI improvements (high priority)
 
-### Chat-Funktionalitaeten
-- **Chat-Text kopierbar**
-  - Aktuell: Chat ist ItemsControl ohne Selektion
-  - Gewuenscht: Text pro Zeile markierbar + Strg+C zum Kopieren
-  - Idee: SelectableTextBlock oder readonly TextBox mit BorderThickness=0
+### Chat
+- **Copyable chat text** - currently the chat is a non-selectable
+  `ItemsControl`. Goal: per-line selection + Ctrl+C.
+- **Chat filtering** - filter checkboxes per chat type
+  (Global / Side / Direct / Vehicle / Group / Command / Admin / Console).
+- **Enter = send** in the broadcast input (Shift+Enter for newline). Matches
+  the PM dialog behavior.
 
-- **Chat-Filterung**
-  - Gewuenscht: Filter-Checkboxes für Chat-Typen
-  - Typen: Global / Side / Direct / Vehicle / Group / Command / Admin / Console
-  - Optionen: "Nur Console", "Nur Commands" etc.
+### Feedback / status messages
+- Toast / info dialog when **Refresh geolocation** finishes (currently runs
+  silently).
 
-- **Enter=Send bei Broadcast-Message**
-  - Aktuell: Nur Send-Button, Enter macht Zeilenumbruch
-  - Gewuenscht: Enter sendet direkt (wie in Spieler-PM)
-  - Shift+Enter fuer Zeilenumbruch
+### Scheduler
+- Context menu for scheduler entries (Edit / Delete / Run now for global
+  tasks and shutdowns).
 
-### Feedback & Status-Meldungen
-- **"Refresh geolocation" Rueckmeldung**
-  - Aktuell: Befehl laeuft stillschweigend
-  - Gewuenscht: Toast/Info-Dialog wie bei "Refresh Steam profile"
 
-### Scheduler UI-Improvements
-- **Kontextmenue für Scheduler-Einträge**
-  - Messages: Rechtsklick -> Edit / Delete
-  - Shutdown: Rechtsklick -> Edit / Delete / Run now
-  - Global Tasks: Rechtsklick -> Edit / Delete / Run now
+## Feature ideas (future roadmap)
 
-### UI-Branding & Layout
-- **Window-Icon (D-Logo) Optimierung**
-  - Aktuell: D-Logo zeigt zu groß in Titelleiste
-  - Gewuenscht: Kompaktes Layout - nur Name + Version + Buttons (Support/Mode/Info/Settings)
-  - Logo bleibt in Taskleisten-Icon + Fenster-Ecke
+### Server management
+- Drag-and-drop reorder of server tabs, with order persisted in SQLite.
+- Mark new players in the Player DB (`first_seen < X days`) and trigger an
+  automatic Steam profile check for them.
 
-## Feature-Ideen (Future Roadmap)
+### Network / diagnostics
+- Connection-quality monitoring:
+  - Ping to the configured server host
+  - Ping to a neutral target (8.8.8.8 default, configurable)
+  - Helps diagnose latency vs. packet loss when an RCon disconnect happens.
 
-### Server-Management
-- **Server-Tabs per Drag-and-Drop umsortieren**
-  - Reihenfolge in SQLite persistieren
+### UX
+- Smart auto-scroll for chat view, console log and player log dialog
+  (only scroll if the user was near the bottom, not when intentionally
+  scrolled up).
 
-- **Player-Activity Tracking**
-  - Brandneue Spieler in Player-DB markieren (first_seen < X Tage)
-  - Automatischer Steam-Profil-Check für neue Spieler
+### Geolocation
+- Highlight country changes for a player (color indicator).
+- Auto-kick / auto-ban by country (optional, off by default).
 
-### Netzwerk & Diagnose
-- **Connection-Quality-Monitoring**
-  - Ping zu Server-IP
-  - Ping zu neutralem Ziel (8.8.8.8 default, konfigurierbar)
-  - Latenz + Packet-Loss bei RCon-Disconnect diagnostizieren
+### IP ban
+- **In place:** in-tool IP-ban table. Players whose IP is in the table get
+  kicked on the next player refresh (works only while the tool is connected
+  to the server).
+- **Planned:** additionally write an entry to a dedicated log file in
+  [DigitalRuby IPBan](https://github.com/DigitalRuby/IPBan) format on
+  every IP ban. IPBan can then enforce the ban at the OS firewall level,
+  so the address is blocked even when RHD-RCON is down. Open questions:
+  log file path + rotation, which event types to write, whether the entry
+  is written immediately on ban-add or only when the player actually tries
+  to connect.
 
-### UX-Improvements
-- **Auto-Scroll bei neuen Einträgen**
-  - Chat-View, Console-Log, Player-Log-Dialog
-  - Smart: Scrollt nur wenn User nah am Ende war, nicht wenn bewusst hochgescrollt
+### Database cleanup
+- Optional, opt-in cleanup logic: remove entries older than X days when
+  more than Y entries exist. Off by default - admin enables per table.
 
----
+| Table | Date column | Cleanup rule |
+|---|---|---|
+| `player_change_log` | `changed_at` | older than 1 year AND more than 30 per player |
+| `player_server_log` | `last_seen` | not seen in over 1 year |
+| `ban_sync` | `created_at` | synced entries older than 90 days |
 
-## Status
+### Global scheduler
+- Optional, opt-in cross-server scheduled tasks (one entry runs on
+  multiple servers). Off by default - admin enables when needed.
 
-**Release-Version:** v1.0.2  
-**Letztes Update:** 2026-05-16  
-**Nächste Phase:** Nach öffentlichem Release + User-Feedback geplant
+### Country block
+- Auto-kick or auto-ban by country (optional, off by default). Configurable
+  allow- or blocklist of ISO country codes, applied on player connect.
 
-Feedback & Feature-Requests: [GitHub Issues](https://github.com/DeandlDernai/RHD-RCON)
+### Whitelist management
+- UI for the existing whitelist DB table - add / remove GUIDs, optional
+  enforce-mode that kicks non-whitelisted players on connect.
+
+### Other
+- Player DB / ban list export beyond the current PlayerDB JSON.
