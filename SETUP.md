@@ -7,6 +7,20 @@ This guide assumes you already run a DayZ Epoch server with BattlEye, know
 where `BEServer.cfg` lives, and have edited `dayz_server.pbo` before. It
 focuses on what RHD-RCON specifically needs.
 
+## Prerequisites
+
+RHD-RCON is a **Windows desktop application**. Specifically:
+
+- **Windows 10 / 11** or **Windows Server with Desktop Experience**
+  (Windows Server 2016, 2019, 2022 - the default installation option).
+- **Windows Server Core is not supported.** The tool is a GUI application
+  (Avalonia / Direct2D) and needs the desktop graphics stack that Server
+  Core does not ship. Microsoft no longer supports converting Server Core
+  to / from Desktop Experience after install, so if you ended up on Server
+  Core you will need a fresh OS install - or run RHD-RCON in **client
+  mode** from a normal Windows PC against your game server's RCon port.
+- No additional .NET runtime is required - the EXE is self-contained.
+
 ## Choosing a mode
 
 RHD-RCON has two operating modes. Pick the one that matches your role:
@@ -31,44 +45,65 @@ Server mode unlocks every feature but requires a few one-time setup steps
    EXE on first run.
 3. Run the EXE. On first start a wizard asks for mode (pick **Client**),
    admin name and theme.
-4. Click **+ Add server** in the top-right, enter Name / Host / Port /
-   Password, hit **Test connect**. Save.
-5. Done. Click the new server tab on the left to connect and start managing.
+4. **Set the RCon password as an environment variable** (since 1.0.4 the
+   tool reads it from the OS, never from the DB). Admin PowerShell:
+   ```powershell
+   [Environment]::SetEnvironmentVariable("RH_RCON_PASSWORD", "your-rcon-password", "Machine")
+   ```
+   Log out / in (or reboot) so a fresh process sees the variable.
+   For multiple servers with different passwords, append a suffix per
+   server (e.g. `RH_RCON_PASSWORD_S2` -> in the dialog set suffix `_S2`).
+5. Click **+ Add server** in the top-right, enter Name / Host / Port and
+   the **env-var suffix** (leave empty if you used the default
+   `RH_RCON_PASSWORD`). Hit **Test connect**. Save.
+6. Done. Click the new server tab on the left to connect and start managing.
 
 ## Quick start (server mode)
 
 Server mode on top of the client-mode steps:
 
-1. **If you plan to use MySQL Steam-ID resolution**, set the MySQL
-   password as a system environment variable (Admin PowerShell):
-   ```powershell
-   [Environment]::SetEnvironmentVariable("RH_MYSQL_PASSWORD", "your-mysql-password", "Machine")
-   ```
-   Log out / in (or reboot) so a fresh process sees the variable. Skip
-   this step if you do not plan to enable MySQL.
+1. Run the EXE **as Administrator** (needed for the restart scripts).
+2. First-run wizard: pick **Server**.
+3. Configure the **Steam-ID provider per server** (optional, only if
+   you want Steam-ID resolution) in the Add/Edit-Server dialog. Two
+   providers ship in 1.0.4:
+   - **`none`** (default) - no Steam-ID lookup. Pick this for Reforger,
+     DayZ Standalone, or any server that has no MySQL Hive.
+   - **`mysql`** - enter Host / Port / Database / User of your Epoch
+     (or Arma 3 Hive) DB. The password is read from an environment
+     variable: the tool combines the hardcoded prefix
+     `RH_MYSQL_PASSWORD` with a per-server **suffix** you set in the
+     dialog (empty suffix = `RH_MYSQL_PASSWORD`, suffix `_DE` =
+     `RH_MYSQL_PASSWORD_DE`, etc.). No password is ever stored in
+     `resthirnrcon.db`.
+4. To make the `mysql` provider actually return Steam-IDs: install the
+   optional MySQL table + SQF hook on your DayZ server (see
+   [Server-side prerequisites](#server-side-prerequisites) below).
 
-2. Run the EXE **as Administrator** (needed for the restart scripts).
-3. First-run wizard: pick **Server**.
-4. Configure MySQL (optional, for Steam-ID resolution): **Settings -> MySQL**.
-   The password field is intentionally absent - the tool reads it from
-   `RH_MYSQL_PASSWORD`.
-5. To enable Steam-ID resolution: install the optional MySQL table + SQF hook
-   on your server (see [Server-side prerequisites](#server-side-prerequisites)
-   below).
+**Upgrading from 1.0.3 or earlier:** the global `Settings -> MySQL` tab is
+gone. The 1.0.4 schema migration automatically copies your old global
+MySQL config (Host/Port/User/Database) into every existing server with
+provider `mysql` and an **empty password suffix**, so the tool keeps
+reading the same `RH_MYSQL_PASSWORD` env-var you already had set. No
+manual changes needed. If you want to give a specific server its own
+password, open the server-edit dialog and fill in a suffix (e.g. `_DE`
+-> set `RH_MYSQL_PASSWORD_DE` in your OS).
 
 ## Server-side prerequisites
 
 For most features RHD-RCON only needs the BattlEye RCon password. Two
 optional capabilities need server-side preparation:
 
-### A) Steam-ID resolution (server mode)
+### A) Steam-ID resolution (server mode, `mysql` provider)
 
-RHD-RCON resolves BattlEye GUIDs to Steam-IDs by reading a `player_login_log`
-table that your DayZ server writes on every player login. Without this table,
-Steam-ID lookups stay empty and the VAC/Game-Ban check via Steam Web API has
-nothing to query.
+RHD-RCON resolves BattlEye GUIDs to Steam-IDs through a per-server
+**Steam-ID provider**. In 1.0.4 the only provider that hits a database
+is `mysql`: it reads a `player_login_log` table that your DayZ server
+writes on every player login. Without this table the `mysql` provider
+returns nothing and the VAC/Game-Ban check via Steam Web API has nothing
+to query. Servers configured with provider `none` skip this entirely.
 
-**Required pieces** (on your DayZ server DB , not the RHD-RCON PC):
+**Required pieces** (on your DayZ server DB, not the RHD-RCON PC):
 
 | Component | What | Where |
 |---|---|---|
@@ -89,8 +124,14 @@ Verify on the server side after deployment:
 SELECT * FROM player_login_log ORDER BY LoginTime DESC LIMIT 10;
 ```
 
-Rows should appear on every player login. Once that works, RHD-RCON's
-Steam-ID lookups in server mode start populating automatically.
+Rows should appear on every player login. Once that works, set the
+server's Steam-ID provider to `mysql` in the Add/Edit-Server dialog and
+RHD-RCON's Steam-ID lookups start populating automatically.
+
+**Multi-server with separate databases:** every server has its own
+provider config blob, so you can point server A at DB `epoch_eu` and
+server B at DB `epoch_us` from the same RHD-RCON instance. No global
+config to clash on.
 
 ### B) Scheduled server restarts (server mode)
 
@@ -135,11 +176,39 @@ typically running 24/7 on the server PC.
 
 ### Server tab (per-server)
 
-Fields are self-explanatory in the Add/Edit-Server dialog. Two things
+Fields are self-explanatory in the Add/Edit-Server dialog. A few things
 worth knowing:
 
-- **Password** is stored encrypted in SQLite.
+- **RCon password (since 1.0.4)** is read from an environment variable
+  on every connect, never stored in `resthirnrcon.db`. You enter only
+  the **env-var suffix** in the dialog: empty -> reads
+  `RH_RCON_PASSWORD`, suffix `_S2` -> reads `RH_RCON_PASSWORD_S2`, etc.
+  The dialog shows the full computed name live (`Full env-var name:
+  RH_RCON_PASSWORD_S2`).
 - **Auto-connect** makes 3 attempts with 2s delay on tool start.
+- **Tab order** (since 1.0.4) - small `<` / `>` buttons in each tab
+  header move the tab left/right. The order is persisted across restarts.
+- **Steam-ID provider** (since 1.0.4) - per-server plugin:
+  - **`none`** - no lookup. Pick this for Reforger / DayZ Standalone /
+    any server without an Epoch-style MySQL Hive.
+  - **`mysql`** - reads `player_login_log` from your DB. You enter
+    Host/Port/Database/User and a **password env-var suffix**:
+    - The tool combines the hardcoded prefix `RH_MYSQL_PASSWORD` with
+      your suffix to build the env-var name it reads on each connect.
+      Empty suffix -> reads `RH_MYSQL_PASSWORD` (the 1.0.3 default).
+      Suffix `_DE` -> reads `RH_MYSQL_PASSWORD_DE`. Set the env-var
+      yourself at OS level (Windows: `setx`; Linux/macOS: shell rc /
+      systemd EnvironmentFile).
+    - The dialog shows the full computed name live (`Voller
+      Env-Var-Name: RH_MYSQL_PASSWORD_DE`) so you know exactly which
+      variable to set.
+    - **No password ever lands in `resthirnrcon.db`** - back up the DB
+      file freely.
+  - **Copy provider config from another server** - convenience button
+    in the dialog. Pick another server from the dropdown and its
+    provider + config (Host/Port/User/Database + the password suffix)
+    is copied over. Handy when you run several servers against the
+    same DB.
 
 ### IP Ban tab *(server mode)*
 
@@ -168,12 +237,12 @@ ban can also be enforced at the OS level. Not implemented yet - see
 - **Export / Import** as SQL file - useful for handing off your already-built
   geolocation cache to client admins so they do not have to hit the API.
 
-### MySQL tab *(server mode only)*
+### MySQL configuration *(server mode, per server)*
 
-| Setting | What it does |
-|---|---|
-| **Host / Port / Database / User** | Connection to the DayZ Epoch MySQL database. |
-| Password | Read from env var `RH_MYSQL_PASSWORD`. No field in the UI. |
+There is no global MySQL tab in Settings since 1.0.4. MySQL is
+configured per server in the Add/Edit-Server dialog under
+**Steam-ID provider -> `mysql`** (see [Server tab](#server-tab-per-server)
+above for the full field list).
 
 The tool only **reads** `player_login_log` - no write access required.
 
@@ -186,15 +255,65 @@ The tool only **reads** `player_login_log` - no write access required.
 Works in both modes. Steam Web API has a 100k calls/day quota, plenty for
 typical server sizes.
 
-## Environment variables (server mode)
+## Environment variables
 
-Only one variable, and only if you use MySQL Steam-ID resolution:
+Since 1.0.4 **no passwords are stored in `resthirnrcon.db`**. The tool
+reads them from environment variables on every connect. The variable
+name is built from a **fixed prefix** plus a **per-server suffix** you
+enter in the Edit-Server dialog. Two prefixes exist:
 
-- `RH_MYSQL_PASSWORD` - MySQL password. Read from env on every connect,
-  never stored anywhere by the tool.
+| Prefix | Used for | Required when |
+|---|---|---|
+| `RH_RCON_PASSWORD` | BattlEye RCon password | Always (any server you want to connect to) |
+| `RH_MYSQL_PASSWORD` | MySQL provider password | Only if a server uses the `mysql` Steam-ID provider (server mode) |
 
-The MySQL password is intentionally **not** stored in `resthirnrcon.db`
-or any config file. Backup `resthirnrcon.db` freely - no secrets in it.
+The suffix can be empty (then the bare prefix is read). Examples:
+
+| Suffix in server dialog | RCon env-var | MySQL env-var |
+|---|---|---|
+| *(empty)* | `RH_RCON_PASSWORD` | `RH_MYSQL_PASSWORD` |
+| `_DE` | `RH_RCON_PASSWORD_DE` | `RH_MYSQL_PASSWORD_DE` |
+| `_S2` | `RH_RCON_PASSWORD_S2` | `RH_MYSQL_PASSWORD_S2` |
+
+The RCon suffix and the MySQL suffix are independent per server - you
+do not have to use the same suffix for both. The variable is read on
+every connect; nothing is cached.
+
+**Set the env-var yourself in your OS.**
+
+Windows (machine-wide so a logon-on-start setup also sees it):
+
+```powershell
+[Environment]::SetEnvironmentVariable("RH_RCON_PASSWORD", "your-rcon-password", "Machine")
+[Environment]::SetEnvironmentVariable("RH_MYSQL_PASSWORD", "your-mysql-password", "Machine")
+```
+
+Log out / in (or reboot) so a fresh process picks it up.
+
+Linux / macOS - put it in your shell rc, or for a systemd unit use
+`EnvironmentFile=` so the env-var lands in the service environment.
+
+**No secrets ever land in `resthirnrcon.db`** - back up the file
+freely.
+
+### Upgrading from 1.0.3 -> 1.0.4 (RCon password breaking change)
+
+In 1.0.3 the RCon password lived inside `resthirnrcon.db`. The 1.0.4
+schema migration **drops the column** - existing passwords are gone
+and cannot be recovered. You need to:
+
+1. Stop the tool.
+2. Set `RH_RCON_PASSWORD` (and optional per-server `_<suffix>`
+   variants) at the OS level using the PowerShell command above.
+3. Start the tool. The migration runs once and writes a backup of the
+   pre-migration DB into `backups/` next to the EXE.
+4. For each server, open the Edit-Server dialog and fill in the
+   **RCon env-var suffix** matching the env-var you set in step 2
+   (leave empty to read the bare `RH_RCON_PASSWORD`).
+5. Hit **Test connect** to verify, then save.
+
+The MySQL provider was already env-var-based in 1.0.3, so the MySQL
+side does not change.
 
 ## Running the tool
 

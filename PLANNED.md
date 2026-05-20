@@ -28,24 +28,13 @@
 ## Feature ideas (future roadmap)
 
 ### Server management
-- Drag-and-drop reorder of server tabs, with order persisted in SQLite.
-- Mark new players in the Player DB (`first_seen < X days`) and trigger an
-  automatic Steam profile check for them.
-
-### Network / diagnostics
-- Connection-quality monitoring:
-  - Ping to the configured server host
-  - Ping to a neutral target (8.8.8.8 default, configurable)
-  - Helps diagnose latency vs. packet loss when an RCon disconnect happens.
+- Show the current online player count next to the server name (in the
+  server tab header). Updates whenever the player list refreshes.
 
 ### UX
 - Smart auto-scroll for chat view, console log and player log dialog
   (only scroll if the user was near the bottom, not when intentionally
   scrolled up).
-
-### Geolocation
-- Highlight country changes for a player (color indicator).
-- Auto-kick / auto-ban by country (optional, off by default).
 
 ### IP ban
 - **In place:** in-tool IP-ban table. Players whose IP is in the table get
@@ -59,19 +48,11 @@
   is written immediately on ban-add or only when the player actually tries
   to connect.
 
-### Database cleanup
-- Optional, opt-in cleanup logic: remove entries older than X days when
-  more than Y entries exist. Off by default - admin enables per table.
-
-| Table | Date column | Cleanup rule |
-|---|---|---|
-| `player_change_log` | `changed_at` | older than 1 year AND more than 30 per player |
-| `player_server_log` | `last_seen` | not seen in over 1 year |
-| `ban_sync` | `created_at` | synced entries older than 90 days |
-
-### Global scheduler
-- Optional, opt-in cross-server scheduled tasks (one entry runs on
-  multiple servers). Off by default - admin enables when needed.
+### ISP ban (Internet Service Provider)
+- Kick (or optionally ban) players based on their internet service
+  provider. Useful for cutting off VPN / hosting / proxy networks that
+  are commonly abused by ban evaders. Off by default; configurable
+  provider list per server.
 
 ### Country block
 - Auto-kick or auto-ban by country (optional, off by default). Configurable
@@ -83,3 +64,22 @@
 
 ### Other
 - Player DB / ban list export beyond the current PlayerDB JSON.
+
+## Multi-game support (long term)
+
+RHD-RCON is currently focused on DayZ Mod (Arma 2 OA) servers. The BattlEye
+RCon protocol is the same across multiple Bohemia titles, so support for
+related games is on the roadmap once the DayZ Mod feature set has
+stabilized:
+
+- **DayZ Standalone** - BattlEye RCon, same protocol. Differences live
+  mostly in chat parsing, kick/ban admin labels and the server log format.
+- **Arma 3** - BattlEye RCon. Same protocol; player list and admin chat
+  formats differ. Mainly a parsing / labels question.
+- **Arma Reforger** - BattlEye RCon protocol is supported. Open
+  question is how to feed useful per-player data (Steam-ID etc.) into
+  the tool without impacting server performance.
+
+These are listed here as direction, not as committed milestones - they
+will be tackled after the DayZ Mod (Arma 2 OA) workflow is feature
+complete.

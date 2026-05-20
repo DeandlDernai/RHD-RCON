@@ -1,6 +1,8 @@
 # RHD-RCON
 
-A BattlEye RCon tool for **DayZ Epoch** server admins.
+A BattlEye RCon tool for **DayZ Epoch** server admins, with a plugin
+architecture for other BattlEye-based games (Arma 3, DayZ Standalone,
+Arma Reforger, Arma 4) coming via per-server Steam-ID providers.
 
 Live player monitoring, ban management with multi-server sync, scheduled
 messages, scheduled shutdowns, server-process watchdog (auto-restart on
@@ -37,7 +39,9 @@ comfortable with:
 
 - Editing `BEServer.cfg` and `dayz_server.pbo`
 - Running things on a Windows server (the tool is Windows-only)
-- Optional MySQL access if you want Steam-ID resolution
+- Optional MySQL access if you want Steam-ID resolution (configured
+  per server, so different servers can use different databases or none
+  at all)
 
 If you only need the occasional broadcast, a basic RCon tool is simpler.
 RHD-RCON shines when you run multiple servers, want a shared ban list, or
@@ -52,7 +56,8 @@ walkthrough in [SETUP.md](SETUP.md).
 
 | What | Where from |
 |---|---|
-| **RCon Host / Port / Password** | The server admin (your `BEServer.cfg` `RConPassword`) |
+| **RCon Host / Port** | The server admin (your `BEServer.cfg` `RConPort`) |
+| **RCon Password (env-var, since 1.0.4)** | The server admin (your `BEServer.cfg` `RConPassword`). Stored as an environment variable on **your PC**, never in `resthirnrcon.db`. The tool reads `RH_RCON_PASSWORD` plus a per-server **suffix** you set in the dialog (empty suffix = `RH_RCON_PASSWORD`, suffix `_S2` = `RH_RCON_PASSWORD_S2`, etc.) |
 | **Steam Web API key** (optional, for VAC / Game-Ban lookups) | [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey) |
 
 **Server mode** (you run RHD-RCON on your own server PC). Everything
@@ -61,8 +66,8 @@ from client mode, plus:
 | What | Where from |
 |---|---|
 | **Admin rights** on the server PC | Needed so the watchdog can launch the restart script (only if you use the watchdog feature) |
-| **MySQL credentials** (optional, for Steam-ID resolution) | Your Epoch DB: Host / Port / Database / User. Password goes into env var `RH_MYSQL_PASSWORD`, never stored by the tool |
-| **`player_login_log` table + SQF hook** (optional, only with MySQL) | See [server-integration/](server-integration/) - SQL schema, extDB3 block, SQF hook + step-by-step README. Also shipped in the release ZIP |
+| **MySQL credentials** (optional, for Steam-ID resolution) | Configured **per server** in the Add/Edit-Server dialog under "Steam-ID provider": Host / Port / Database / User. Password is read from an environment variable - the tool uses the prefix `RH_MYSQL_PASSWORD` and appends a per-server **suffix** you choose (e.g. suffix `_DE` -> env-var `RH_MYSQL_PASSWORD_DE`). Empty suffix = `RH_MYSQL_PASSWORD` (1.0.3 default). No secrets land in the DB |
+| **`player_login_log` table + SQF hook** (optional, only with MySQL provider) | See [server-integration/](server-integration/) - SQL schema, extDB3 block, SQF hook + step-by-step README. Also shipped in the release ZIP |
 
 ## Features
 
@@ -91,7 +96,32 @@ from client mode, plus:
     MySQL Steam-ID resolution.
   - **Server mode:** everything above plus scheduler, server-process
     watchdog, IP-ban enforcement, full player DB writes from live data,
-    MySQL Steam-ID resolution.
+    per-server Steam-ID resolution (MySQL provider in 1.0.4; more
+    providers planned for other games).
+
+- **Per-server Steam-ID provider** (since 1.0.4) - each server picks
+  its own Steam-ID source. Two providers ship in 1.0.4:
+  - **`none`** - no Steam-ID lookup. Default for servers that have no
+    DB (Reforger, DayZ Standalone, fresh setups).
+  - **`mysql`** - reads `player_login_log` from your Epoch/Arma 3 Hive
+    DB. Each server has its own DB connection and its own password,
+    so you can run multiple servers against different databases from
+    one tool instance.
+  Future providers (BattlEye-RCon Steam-ID parser, FileWatcher for
+  Reforger/Standalone, HTTP bridge) are plugin-style additions - no
+  database migration needed when they land.
+
+- **Reorder server tabs** (since 1.0.4) - small `<` / `>` buttons in
+  each tab header move the tab left/right. The order is persisted, so
+  your favourite server can stay first across restarts.
+
+- **RCon password from env-var** (since 1.0.4, **breaking change**) -
+  the RCon password is no longer stored in `resthirnrcon.db`. Each
+  server defines an env-var suffix (empty = `RH_RCON_PASSWORD`,
+  `_S2` = `RH_RCON_PASSWORD_S2`, etc.). The tool reads the variable
+  on every connect. Upgrade path: set the env-var(s) on your OS and
+  enter the matching suffix in the Edit-Server dialog. See the
+  [CHANGELOG](CHANGELOG.md) for the migration steps.
 
 ## Download
 
@@ -101,9 +131,9 @@ Get the latest build from the
 Each release ships two assets:
 
 - `RHD-RCON_v1.0.x.zip` - EXE + all docs (`README.md`, `SETUP.md`,
-  `TESTPLAN.md`, `TESTPLAN_SERVER.md`, `PLANNED.md`) + `server-integration/`
-  folder + `.sha256`. Recommended - you get everything offline next to
-  the EXE.
+  `TESTPLAN.md`, `TESTPLAN_SERVER.md`, `PLANNED.md`, `CHANGELOG.md`) +
+  `server-integration/` folder + `.sha256`. Recommended - you get
+  everything offline next to the EXE.
 - `RHD-RCON_v1.0.x.exe` - the bare EXE if you just want a quick update.
 
 **Verify the download** (recommended):
@@ -130,9 +160,16 @@ step by step.
 
 - All player data lives locally in `resthirnrcon.db` next to the EXE. No
   cloud, no telemetry, no auto-update phone-home.
-- Steam-ID lookups (server mode) go to your own MySQL database. Requires
-  one-time server-side setup (MySQL table + SQF hook in `dayz_server.pbo`) -
-  see [SETUP.md](SETUP.md#a-steam-id-resolution-server-mode) for details.
+- **No passwords are stored in `resthirnrcon.db`** (since 1.0.4). The
+  RCon password and the MySQL password (if you use the MySQL provider)
+  are both read from environment variables on every connect. The tool
+  builds the variable name from a fixed prefix (`RH_RCON_PASSWORD` /
+  `RH_MYSQL_PASSWORD`) plus a per-server **suffix** you set in the
+  Edit-Server dialog. Back up `resthirnrcon.db` freely.
+- Steam-ID lookups (server mode, when the MySQL provider is enabled on
+  a server) go to your own MySQL database. Requires one-time server-side
+  setup (MySQL table + SQF hook in `dayz_server.pbo`) - see
+  [SETUP.md](SETUP.md#a-steam-id-resolution-server-mode) for details.
 - Steam profile lookups (VAC/Game-Ban) call the official Steam Web API with
   your own API key. Get a free key at
   [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey),
@@ -168,6 +205,15 @@ live servers, debugging and all decisions are mine. Coding is done with
 AI assistance (Claude) - which is increasingly normal, but worth saying
 out loud so bug reporters know not every corner has had years of human
 review behind it.
+
+## Credits / Third-party assets
+
+- App icon: [Microsoft Fluent UI Emoji](https://github.com/microsoft/fluentui-emoji)
+  ("Wrench" 3D, MIT License, Copyright (c) Microsoft Corporation).
+- Geolocation seed data: [IP2Location LITE](https://lite.ip2location.com),
+  CC-BY-SA 4.0. The bundled IP-to-country database is derived from
+  IP2Location LITE.
+- Live geolocation lookups: [ip-api.com](https://ip-api.com) free tier.
 
 ---
 
