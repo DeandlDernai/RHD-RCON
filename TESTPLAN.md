@@ -214,6 +214,37 @@ ban data come from a JSON export your server admin sends you.
    `[x]` `[-]` `[?]`
    > Question:
 
+### 5.1 Chat view - smart auto-scroll (since 1.0.5)
+
+1. Server tab -> **Chat** tab. With auto-refresh on and a new chat line
+   arriving, the view scrolls to keep the newest line visible.
+   `[x]` `[-]` `[?]`
+   > Question:
+2. Scroll up by ~100px to read older lines. When the next chat line
+   arrives, the scroll position stays put (no jump to the bottom).
+   `[x]` `[-]` `[?]`
+   > Question:
+3. Scroll back to the bottom. Auto-scroll resumes automatically when
+   the next line arrives.
+   `[x]` `[-]` `[?]`
+   > Question:
+
+### 5.2 Chat view - select text + filters
+
+1. Click into a chat line and drag to select text. Ctrl+C copies it to
+   the clipboard.
+   `[x]` `[-]` `[?]`
+   > Question:
+2. Above the chat list, the per-type filter checkboxes (Global / Side /
+   Direct / Vehicle / Group / Command / Admin) hide / show their lines
+   live without reconnecting.
+   `[x]` `[-]` `[?]`
+   > Question:
+3. In the broadcast input, **Enter** sends, **Shift+Enter** adds a
+   newline. Same in the PM dialog.
+   `[x]` `[-]` `[?]`
+   > Question:
+
 ---
 
 ## 6. Running commands
@@ -242,10 +273,22 @@ the ArmA process may not always exit cleanly, this is an ArmA limitation.
 Settings are reached via the gear icon top-right. See [SETUP.md](SETUP.md)
 for the full configuration reference. Quick pointers for client mode:
 
-- **General** - admin name, debug log, theme.
+- **General** - **Client admin name** (used for manual chat / PM / kick /
+  ban), **Server admin name** (used for automated actions; server mode
+  only - hidden here), **Debug log** checkbox toggles file-only debug
+  logging, theme.
 - **Geolocation** - export / import the IP->country cache.
 - **Steam** - your Steam Web API key (optional, for VAC / Game-Ban
   lookups on imported players).
+
+Tabs that exist only in server mode (Country Filter, Name Filter, IP Ban,
+Watchdog) are hidden in client mode.
+
+> Note: the standalone "Debug log" tab from earlier versions has been
+> removed. Debug data is still written to
+> `logs/debug/RHD-RCON_Debug_YYYY-MM-DD.log` when the **Debug log**
+> checkbox is on. See [9. Troubleshooting](#9-troubleshooting) for the
+> log paths.
 
 ---
 
@@ -256,6 +299,10 @@ for the full configuration reference. Quick pointers for client mode:
   - **Green** = connected
   - **Grey** = disconnected
   - **Blue** = ban sync running (non-blocking, other tabs stay usable)
+- Each connected tab shows an **online-player-count pill** in the accent
+  color next to the tab name. After a player connects or disconnects, a
+  short-lived `+1` / `-2` marker appears for a few seconds so you can
+  spot activity at a glance across many tabs.
 
 ---
 
@@ -279,3 +326,11 @@ for the full configuration reference. Quick pointers for client mode:
 - App log: `logs/app-YYYYMMDD.log` next to the EXE - always on.
 - Debug log: `logs/debug/RHD-RCON_Debug_YYYY-MM-DD.log` - only if enabled.
 - Crash log: `crash.log` next to the EXE - on unhandled exceptions.
+
+### "BE Master" console noise
+
+The BattlEye master / cloud status pings used to flood the chat and
+console views in earlier versions. Since 1.0.5 these lines are filtered
+out at parse time, so chat stays readable. If you still see them, please
+report the exact text in a GitHub issue - it means a new variant has
+shown up.

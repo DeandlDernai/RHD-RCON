@@ -42,8 +42,10 @@ If you started in client mode, switch first.
    if prompted.
    `[x]` `[-]` `[?]`
    > Question:
-2. After restart: Settings now shows the server-mode tabs (**MySQL**,
-   **IP Ban**, server-side scheduler entries, ...).
+2. After restart: Settings now shows the server-mode tabs (**Country
+   Filter**, **Name Filter**, **IP Ban**, server-side scheduler entries,
+   ...). The Add/Edit-Server dialog gains additional tabs (**Filters**,
+   **Steam-ID**, **Watchdog**) that are hidden in client mode.
    `[x]` `[-]` `[?]`
    > Question:
 
@@ -82,13 +84,20 @@ Requires the optional server-side integration (MySQL table
 `player_login_log`, extDB3 protocol, SQF hook). See
 [SETUP.md - Steam-ID resolution](SETUP.md#a-steam-id-resolution-server-mode).
 
-### 3.1 MySQL connection
+> Since 1.0.4 there is **no global MySQL tab in Settings**. The MySQL
+> provider is configured per server in the Add/Edit-Server dialog on the
+> **Steam-ID** tab.
 
-1. Settings -> **MySQL** -> enter Host / Port / Database / User.
-   Password is read from `RH_MYSQL_PASSWORD` env var, no field in the UI.
+### 3.1 MySQL provider per server
+
+1. Server-Edit dialog -> **Steam-ID** tab -> set Provider to **mysql**,
+   enter Host / Port / Database / User and the **password env-var
+   suffix** (empty = `RH_MYSQL_PASSWORD`, `_DE` = `RH_MYSQL_PASSWORD_DE`,
+   etc.). The full env-var name is shown live below the suffix field.
    `[x]` `[-]` `[?]`
    > Question:
-2. **Test connection** -> green check.
+2. **Test connection** -> green check. (Password is read from the env-var
+   on every connect; no field in the UI.)
    `[x]` `[-]` `[?]`
    > Question:
 
@@ -182,24 +191,181 @@ them itself: an in-tool IP-ban table, checked on every player refresh.
 
 ---
 
-## 6. Scheduled server restarts
+## 6. Country filter (since 1.0.5)
+
+Connect-time filter by ISO country code (allow- or blocklist). Settings
+are global; the per-server **on/off** switch and **kick message** live
+in the Server-Edit dialog. The **Whitelist** (section 8) bypasses this
+filter on a per-player basis.
+
+### 6.1 Configure the filter
+
+1. Settings -> **Country Filter** -> set Mode to **block**, add a
+   country code you can test with (e.g. `DE`) to the country list,
+   and set a kick message. Save.
+   `[x]` `[-]` `[?]`
+   > Question:
+2. Server-Edit dialog -> **Filters** tab -> the "Country filter active
+   for this server" checkbox is on by default and the per-server
+   "Country kick message" defaults to empty (falls back to the global
+   message).
+   `[x]` `[-]` `[?]`
+   > Question:
+
+### 6.2 Verify a kick
+
+1. A player connecting from a matching country (here: `DE`) is kicked
+   on the next refresh tick with the configured message.
+   `[x]` `[-]` `[?]`
+   > Question:
+2. **Player DB** -> right-click the player -> **Player Log...** ->
+   **Actions** shows a `Country-Kick` entry with detail
+   `Country: <code> | Mode: <off/allow/block> | Liste: ...`.
+   `[x]` `[-]` `[?]`
+   > Question:
+
+### 6.3 Per-server override
+
+1. Open one server's Edit dialog -> **Filters** tab -> uncheck the
+   "Country filter active for this server" box and save.
+   `[x]` `[-]` `[?]`
+   > Question:
+2. On that server, the same player can now connect. Other servers (with
+   the toggle still on) continue to kick.
+   `[x]` `[-]` `[?]`
+   > Question:
+
+### 6.4 Live wirksamkeit
+
+1. Change the country list / mode / kick message in Settings and save -
+   the change applies to any running session **without reconnect**.
+   `[x]` `[-]` `[?]`
+   > Question:
+
+---
+
+## 7. Name filter (since 1.0.5)
+
+Connect-time filter on the player name. Three strategies, evaluated in
+order with early exit:
+
+1. **Pattern blacklist** (CSV, case-insensitive substring match) - e.g.
+   `admin,discord.gg`.
+2. **Allowed character set** (Ascii / Latin / LatinCyrillic / Any) -
+   first non-allowed char kicks with reason `cyrillic` / `asian` /
+   `arabic` / `hebrew` / `non-latin`.
+3. **Symbol-spam ratio** - max percentage of special chars in the name
+   (100% = off).
+
+> **Important:** the whitelist does **not** bypass the name filter.
+> Even whitelisted players (including admins) must have readable names.
+
+### 7.1 Configure the filter
+
+1. Settings -> **Name Filter** -> set Allowed character set to **Latin**,
+   add `admin` to the forbidden patterns list, set a kick message. Save.
+   `[x]` `[-]` `[?]`
+   > Question:
+2. Server-Edit dialog -> **Filters** tab -> "Name filter active for this
+   server" is on by default and "Name kick message" defaults to empty.
+   `[x]` `[-]` `[?]`
+   > Question:
+
+### 7.2 Cyrillic / non-Latin kick
+
+1. A test player with a cyrillic name (e.g. `Витя`) connects -> gets
+   kicked on the next refresh tick.
+   `[x]` `[-]` `[?]`
+   > Question:
+2. Player Log -> **Actions** shows a `Name-Kick` entry with detail
+   `Reason: cyrillic` (or `asian`, `arabic`, `hebrew`, `non-latin` for
+   other scripts).
+   `[x]` `[-]` `[?]`
+   > Question:
+
+### 7.3 Pattern kick
+
+1. A player named `Admin Bob` connects -> kicked with reason
+   `pattern 'admin'`.
+   `[x]` `[-]` `[?]`
+   > Question:
+2. Whitelisted (see section 8) version of the same player **still gets
+   kicked** - the name filter is absolute.
+   `[x]` `[-]` `[?]`
+   > Question:
+
+---
+
+## 8. Whitelist (since 1.0.5)
+
+Whitelisted players bypass the **country filter** (not the name filter).
+Match is by GUID **OR** SteamID, so partial info is enough.
+
+### 8.1 The Whitelist tab
+
+1. Left tab **Whitelist** (next to **Player DB**). Grid shows
+   GUID / SteamID / Note / AddedAt.
+   `[x]` `[-]` `[?]`
+   > Question:
+
+### 8.2 Add an entry - four ways
+
+1. **Whitelist tab -> Add** -> empty dialog, fill in GUID and/or
+   SteamID + a note. Save -> appears in the grid.
+   `[x]` `[-]` `[?]`
+   > Question:
+2. **Settings -> Country Filter -> "Add whitelist entry..."** -> opens
+   the same empty dialog.
+   `[x]` `[-]` `[?]`
+   > Question:
+3. **Players view -> right-click a player -> "Add to whitelist..."** ->
+   dialog opens pre-filled with that player's GUID / SteamID / name.
+   `[x]` `[-]` `[?]`
+   > Question:
+4. **Player DB -> right-click a player -> "Add to whitelist..."** ->
+   same pre-filled dialog.
+   `[x]` `[-]` `[?]`
+   > Question:
+
+### 8.3 Whitelist indicator
+
+1. Players view and Player DB both show a **star** column. Whitelisted
+   players have a filled star.
+   `[x]` `[-]` `[?]`
+   > Question:
+
+### 8.4 Bypass + Audit log
+
+1. Add a whitelist entry for a player whose country would normally kick
+   them. The player connects and **stays** (no country kick).
+   `[x]` `[-]` `[?]`
+   > Question:
+2. Player Log -> **Actions** shows `Whitelist-Add` (and `Whitelist-Remove`
+   after removal) entries with note + admin name (only logged if a
+   GUID is present on the entry).
+   `[x]` `[-]` `[?]`
+   > Question:
+
+---
+
+## 9. Scheduled server restarts
 
 A scheduled restart = scheduled shutdown (RHD-RCON does this) + restart
 trigger (your `.ps1` / `.bat` does this via the watchdog). See
 [SETUP.md - Scheduled server restarts](SETUP.md#b-scheduled-server-restarts-server-mode).
 
-### 6.1 Configure process + restart script
+### 9.1 Configure process + restart script
 
-1. Server tab -> **Process monitoring** -> set **ServerProcessName**
-   (e.g. `arma2oaserver.exe`) and **RestartScriptPath** (full path to
-   your start `.ps1` or `.bat`).
+1. Server-Edit dialog -> **Watchdog** tab -> set **ServerProcessName**
+   (e.g. `arma2oaserver.exe`), **RestartScriptPath** (full path to your
+   start `.ps1` or `.bat`) and enable **Process monitor active**.
    `[x]` `[-]` `[?]`
    > Question:
 2. **Test script** button starts the script once. ArmA server comes up.
    `[x]` `[-]` `[?]`
    > Question:
 
-### 6.2 Watchdog (process crash)
+### 9.2 Watchdog (process crash)
 
 1. With the server running, kill the ArmA process manually (Task Manager
    -> End Task).
@@ -214,7 +380,7 @@ trigger (your `.ps1` / `.bat` does this via the watchdog). See
    `[x]` `[-]` `[?]`
    > Question:
 
-### 6.3 Scheduled shutdown
+### 9.3 Scheduled shutdown
 
 1. Server tab -> **Scheduler** -> add a **Shutdown** entry with warn
    minutes (e.g. `30,15,5,1`) and a daily time a few minutes from now.
@@ -231,10 +397,15 @@ trigger (your `.ps1` / `.bat` does this via the watchdog). See
    sees the gap on the next tick and runs the restart script.
    `[x]` `[-]` `[?]`
    > Question:
+5. The Scheduler grid `Last run` column updates live with the new
+   timestamp (format `yyyy-MM-dd HH:mm:ss`) **without** switching away
+   and back to the tab.
+   `[x]` `[-]` `[?]`
+   > Question:
 
 ---
 
-## 7. Daily ban-status sync
+## 10. Daily ban-status sync
 
 The tool runs a background sync between RHD-RCON DB and BattlEye
 `bans.txt` once a day. Default 04:00.
@@ -250,7 +421,7 @@ The tool runs a background sync between RHD-RCON DB and BattlEye
 
 ---
 
-## 8. Logs to look at if something goes wrong
+## 11. Logs to look at if something goes wrong
 
 - App log: `logs/app-YYYYMMDD.log` next to the EXE - always on.
 - Debug log: `logs/debug/RHD-RCON_Debug_YYYY-MM-DD.log` - only if enabled.
