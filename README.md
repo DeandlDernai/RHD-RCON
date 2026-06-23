@@ -72,19 +72,44 @@ from client mode, plus:
 ## Features
 
 - **Player management** - live list with country flag, Steam-ID, right-click
-  for kick/ban/PM/comment
+  for kick/ban/PM/comment. Whitelist-star column shows protected players
+  at a glance.
 - **Ban management** - BattlEye GUID bans, multi-server ban sync, offline
   queue (bans get applied to servers that come back online later)
 - **Player database** - cross-server, name- and IP-change history, action
-  log per player
+  log per player. Audit entries for connect-filter kicks (Country-Kick /
+  Name-Kick) and whitelist add/remove show up in the player action log.
+- **Connect filters** (server mode only, since 1.0.5):
+  - **Country filter** - allow- or blocklist of ISO country codes, kicks
+    on connect with a configurable per-server message.
+  - **Name filter** - allowed Unicode block (Ascii / Latin /
+    LatinCyrillic / Any), max special-char ratio, and a forbidden
+    substring pattern list (e.g. `admin,discord.gg`). Kicks unlesbare
+    or impersonating names on connect.
+  - **Whitelist** - dedicated tab on the left with its own grid (GUID
+    and/or SteamID, free-form note, AddedAt timestamp). Match is
+    GUID-OR-SteamID, so partial info is enough. Four ways to add an
+    entry: the whitelist tab itself, Settings -> Country Filter,
+    right-click in the Players view, right-click in the Player DB.
+    Whitelist is enforced **for the country filter only** - the name
+    filter is absolute (even admins must have readable names).
 - **Scheduler** (server mode only) - scheduled chat broadcasts, daily server
-  restarts with warn broadcasts + clean process kill
+  restarts with warn broadcasts + clean process kill. Live `Last run`
+  timestamp updates without leaving the tab.
 - **Server-process watchdog** (server mode only) - polls the configured
   game-server process every 20s and runs your restart script if it has
   died (with cooldown to prevent restart loops)
 - **IP ban list** (server mode only) - in-tool IP-ban table, players with
   banned IPs get kicked on the next refresh (the kick message is
   configurable - keep it generic to hide that it is an IP ban)
+- **Chat view** - selectable text (Ctrl+C to copy), filter checkboxes per
+  log type (Global / Side / Direct / Vehicle / Group / Command / Admin),
+  smart auto-scroll that follows new messages when you are at the bottom
+  and stays put when you scrolled up to read history, Enter = Send in
+  the broadcast input and the PM dialog (Shift+Enter for newline).
+- **Server tab header** - online-player-count badge in the accent color
+  next to the tab name; short-lived `+1` / `-2` delta marker after
+  changes makes connects and disconnects easy to spot across tabs.
 - **Two modes:**
   - **Client mode:** GUI for managing someone else's server. Has its own
     local SQLite (server configs, settings, local geo cache, imported
@@ -92,12 +117,14 @@ from client mode, plus:
     work in client mode too - any server you are connected to (or that
     comes back online later) gets the queued ban. What client mode does
     *not* do: scheduler, server-process watchdog, IP-ban enforcement,
-    player DB writes from live data (only via import from a server admin),
-    MySQL Steam-ID resolution.
+    country / name connect-filters, whitelist tab, player DB writes
+    from live data (only via import from a server admin), MySQL
+    Steam-ID resolution.
   - **Server mode:** everything above plus scheduler, server-process
-    watchdog, IP-ban enforcement, full player DB writes from live data,
-    per-server Steam-ID resolution (MySQL provider in 1.0.4; more
-    providers planned for other games).
+    watchdog, IP-ban enforcement, country / name connect-filters,
+    whitelist tab, full player DB writes from live data, per-server
+    Steam-ID resolution (MySQL provider in 1.0.4; more providers
+    planned for other games).
 
 - **Per-server Steam-ID provider** (since 1.0.4) - each server picks
   its own Steam-ID source. Two providers ship in 1.0.4:
@@ -122,6 +149,35 @@ from client mode, plus:
   on every connect. Upgrade path: set the env-var(s) on your OS and
   enter the matching suffix in the Edit-Server dialog. See the
   [CHANGELOG](CHANGELOG.md) for the migration steps.
+
+- **Country / Name auto-kick + Whitelist** (since 1.0.5, server mode only) -
+  kick players on connect by country code or name pattern with a
+  configurable per-server message. A separate whitelist tab protects
+  individual players from the country filter (match by GUID or
+  SteamID). Setup pointers in [SETUP.md](SETUP.md#c-connect-filters-server-mode);
+  test steps in [TESTPLAN_SERVER.md](TESTPLAN_SERVER.md).
+
+- **Server-Edit dialog with tabs** (since 1.0.5) - the Add/Edit-Server
+  dialog is now split into **Connection**, **Behavior**, **Filters**
+  (server mode), **Steam-ID** (server mode) and **Watchdog** (server
+  mode). Easier to find a single setting and easier to skim what each
+  server is configured for.
+
+- **Chat improvements** (since 1.0.5) - selectable text + Ctrl+C, filter
+  checkboxes per log type, smart auto-scroll (follows the live stream
+  at the bottom, holds position when you scrolled up), Enter sends in
+  both the broadcast input and the PM dialog (Shift+Enter for newline).
+
+- **Online player count badge** (since 1.0.5) - each connected server
+  tab shows a small accent-colored pill with the live player count,
+  plus a short-lived `+1` / `-2` delta after changes.
+
+- **Global admin names** (since 1.0.5, schema V17) - the per-server
+  `admin_name` column is gone. Two global names live under Settings ->
+  General: the **Client admin name** for manual actions (chat / PM /
+  kick / ban) and the **Server admin name** (default `RESTHIRN`) for
+  automated actions (scheduler, ban sync, country/name kicks). Changes
+  take effect after a server disconnect + reconnect.
 
 ## Download
 

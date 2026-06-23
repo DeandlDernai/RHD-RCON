@@ -6,35 +6,19 @@
 > useful and intends to work on as time permits. Feedback and feature
 > requests are welcome via [GitHub Issues](https://github.com/DeandlDernai/RHD-RCON/issues).
 
-## UI improvements (high priority)
-
-### Chat
-- **Copyable chat text** - currently the chat is a non-selectable
-  `ItemsControl`. Goal: per-line selection + Ctrl+C.
-- **Chat filtering** - filter checkboxes per chat type
-  (Global / Side / Direct / Vehicle / Group / Command / Admin / Console).
-- **Enter = send** in the broadcast input (Shift+Enter for newline). Matches
-  the PM dialog behavior.
-
-### Feedback / status messages
-- Toast / info dialog when **Refresh geolocation** finishes (currently runs
-  silently).
+## UI improvements
 
 ### Scheduler
 - Context menu for scheduler entries (Edit / Delete / Run now for global
   tasks and shutdowns).
 
+### Smart auto-scroll
+- Chat auto-scroll is in since 1.0.5. Still planned: the same
+  follow-the-tail-but-pause-when-scrolled-up behavior for the player log
+  dialog (Actions / Server Log / Ban Status tabs).
+
 
 ## Feature ideas (future roadmap)
-
-### Server management
-- Show the current online player count next to the server name (in the
-  server tab header). Updates whenever the player list refreshes.
-
-### UX
-- Smart auto-scroll for chat view, console log and player log dialog
-  (only scroll if the user was near the bottom, not when intentionally
-  scrolled up).
 
 ### IP ban
 - **In place:** in-tool IP-ban table. Players whose IP is in the table get
@@ -53,14 +37,6 @@
   provider. Useful for cutting off VPN / hosting / proxy networks that
   are commonly abused by ban evaders. Off by default; configurable
   provider list per server.
-
-### Country block
-- Auto-kick or auto-ban by country (optional, off by default). Configurable
-  allow- or blocklist of ISO country codes, applied on player connect.
-
-### Whitelist management
-- UI for the existing whitelist DB table - add / remove GUIDs, optional
-  enforce-mode that kicks non-whitelisted players on connect.
 
 ### Other
 - Player DB / ban list export beyond the current PlayerDB JSON.

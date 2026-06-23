@@ -151,8 +151,9 @@ Steam ports, config files, mission name etc. are all your setup). You
 provide a `.ps1` or `.bat` script that contains the exact start command,
 and configure it per-server in the tool:
 
-- **Server tab -> Process monitoring** -> set `ServerProcessName` (e.g.
-  `arma2oaserver.exe`) and `RestartScriptPath` (full path to your script).
+- **Server-Edit dialog -> Watchdog tab** -> set `ServerProcessName` (e.g.
+  `arma2oaserver.exe`), `RestartScriptPath` (full path to your script)
+  and enable **Process monitor active**.
 
 With both set, the built-in **server-process watchdog** polls every 20s.
 If the process is gone (because the scheduler just killed it, or because
@@ -161,12 +162,93 @@ it crashed), it runs your script. A 120s cooldown prevents restart loops.
 So you don't need a separate Windows Scheduled Task - the tool itself is
 the watchdog, you only supply the start script.
 
+### C) Connect filters (server mode)
+
+Two independent connect-time filters were added in 1.0.5. Both are
+**off-server-by-default-on** (the global filter is enabled, and every
+server has its individual on/off toggle on by default). The kick happens
+on the next refresh tick after the player passed BattlEye verification,
+so the player briefly shows up in the live list before being kicked.
+
+**Country filter:**
+
+- Global config: Settings -> **Country Filter** -> Mode (`off` /
+  `allow` / `block`) + CSV list of ISO country codes (e.g. `DE,FR,GB`).
+- Per-server override: Server-Edit dialog -> **Filters** tab -> the
+  "Country filter active for this server" checkbox + the per-server
+  "Country kick message" (max 120 chars, blank = fall back to the
+  global message; if the global is also blank, the filter only logs
+  and does not kick).
+- **Whitelist bypass:** whitelisted GUIDs / SteamIDs are skipped by
+  the country filter. See [Whitelist](#whitelist-server-mode).
+- Audit: every kick lands in `player_change_log` as `Country-Kick`
+  with detail `Country: XX | Mode: yy | Liste: ...`. Visible in the
+  Player Log -> Actions tab.
+- **Live reload:** changes in Settings apply to running sessions
+  without reconnect.
+
+**Name filter:**
+
+- Global config: Settings -> **Name Filter** -> Allowed character set
+  (`Ascii` / `Latin` / `LatinCyrillic` / `Any`), max special-char
+  ratio in % (100 = off), forbidden patterns (CSV of case-insensitive
+  substrings).
+- Per-server override: Server-Edit dialog -> **Filters** tab -> the
+  "Name filter active for this server" checkbox + per-server kick
+  message (same rules as the country message).
+- Three match strategies evaluated in order with early exit:
+  **Pattern** -> **Unicode block** -> **Symbol ratio**.
+- **Whitelist does NOT bypass the name filter.** Even whitelisted
+  admins must have readable names. Deliberate decision.
+- Audit: `Name-Kick` with `Reason: cyrillic` / `asian` / `arabic` /
+  `hebrew` / `non-latin` / `too-many-symbols` / `pattern '...'`.
+
+### Whitelist (server mode)
+
+The whitelist protects individual players from the **country filter**
+(not from the name filter). Match is by GUID **OR** SteamID, so an
+entry with only one of the two is enough.
+
+Lives in its own left-side tab next to **Player DB**. Each entry has:
+GUID (nullable) / SteamID (nullable) / Note / AddedAt.
+
+Four ways to add an entry, all open the same dialog:
+
+| Where | Pre-filled with |
+|---|---|
+| Whitelist tab -> **Add** | empty |
+| Settings -> Country Filter -> **Add whitelist entry...** | empty |
+| Players view -> right-click -> **Add to whitelist...** | that player's GUID / SteamID / name |
+| Player DB -> right-click -> **Add to whitelist...** | that player's GUID / SteamID / name |
+
+Players view and Player DB both show a **star** column for at-a-glance
+identification. Add / remove is audit-logged as `Whitelist-Add` /
+`Whitelist-Remove` (only when a GUID is present on the entry, since
+the audit log is GUID-keyed).
+
 
 ## Configuration reference
 
 ### General tab
 
-Self-explanatory: admin name, debug log path, theme.
+Self-explanatory: admin names, debug log toggle, theme.
+
+**Admin names (since 1.0.5)** are global - the per-server `admin_name`
+column was removed by schema migration v16 -> v17. Two names live here:
+
+| Setting | Used by |
+|---|---|
+| **Client admin name** | Manual actions you trigger from the UI: chat broadcasts, PMs, kicks, bans. |
+| **Server admin name** (default `RESTHIRN`) | Automated actions: scheduler, daily ban sync, country / name connect-kicks. |
+
+Both names are injected into the active RCon session on connect, so a
+change here takes effect after **disconnect + reconnect** of the
+affected server.
+
+The **Debug log** checkbox toggles writes to
+`logs/debug/RHD-RCON_Debug_YYYY-MM-DD.log`. The standalone "Debug log"
+tab from earlier versions has been removed - the file is still written
+when the checkbox is on.
 
 The **Ban sync time** *(server mode)* sets when the daily background
 ban-status sync between RHD-RCON DB and BattlEye `bans.txt` runs.
@@ -176,8 +258,18 @@ typically running 24/7 on the server PC.
 
 ### Server tab (per-server)
 
-Fields are self-explanatory in the Add/Edit-Server dialog. A few things
-worth knowing:
+Since 1.0.5 the Add/Edit-Server dialog is split into tabs to keep
+related settings together:
+
+| Dialog tab | Modes | Contains |
+|---|---|---|
+| **Connection** | both | Name, Host, Port, RCon env-var suffix, Tab color |
+| **Behavior** | both | Auto refresh, Chat log path, Auto-connect at startup |
+| **Filters** | server | Country filter on/off + kick message, Name filter on/off + kick message |
+| **Steam-ID** | server | Provider (`none` / `mysql`), MySQL Host / Port / Database / User, MySQL password env-var suffix, **Copy provider config from another server** |
+| **Watchdog** | server | ServerProcessName, RestartScriptPath, Process monitor active toggle |
+
+Fields are self-explanatory. A few things worth knowing:
 
 - **RCon password (since 1.0.4)** is read from an environment variable
   on every connect, never stored in `resthirnrcon.db`. You enter only
@@ -209,6 +301,30 @@ worth knowing:
     provider + config (Host/Port/User/Database + the password suffix)
     is copied over. Handy when you run several servers against the
     same DB.
+
+### Country Filter tab *(server mode)*
+
+| Setting | What it does |
+|---|---|
+| **Mode** | `off` (filter disabled globally) / `allow` (only listed countries can connect) / `block` (listed countries are kicked). |
+| **Country list** | CSV of ISO-3166 alpha-2 country codes (e.g. `DE,FR,GB`). |
+| **Global kick message** | Default kick message (max 120 chars). Each server can override it on the **Filters** tab of its Edit dialog. |
+| **Add whitelist entry...** | Shortcut to the whitelist-entry dialog (empty). Whitelisted players bypass this filter (match by GUID or SteamID). |
+
+See [C) Connect filters](#c-connect-filters-server-mode) above for the
+per-server toggle, audit-log behavior and live-reload semantics.
+
+### Name Filter tab *(server mode)*
+
+| Setting | What it does |
+|---|---|
+| **Allowed character set** | `Ascii` (strict, no umlauts), `Latin` (Latin-1 + Latin-Extended; recommended default), `LatinCyrillic` (also allow Cyrillic), `Any` (off). |
+| **Max special chars %** | Maximum allowed ratio of symbol characters in the name. 100 = off. Default 60. |
+| **Forbidden patterns** | CSV of case-insensitive substrings. Useful against impersonation (e.g. `admin,moderator,discord.gg`). |
+| **Global kick message** | Default message; per-server override on the Filters tab of the Edit dialog. |
+
+> Whitelisted players **still get kicked** by the name filter. The name
+> filter is absolute - even admins must have readable names.
 
 ### IP Ban tab *(server mode)*
 
