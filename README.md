@@ -216,6 +216,28 @@ step by step.
 
 - All player data lives locally in `resthirnrcon.db` next to the EXE. No
   cloud, no telemetry, no auto-update phone-home.
+- **What personal data is stored:** player IP address, BattlEye GUID,
+  in-game name (and name/IP-change markers), country code, and - if you
+  enable Steam lookups - the Steam-ID and cached Steam profile. GUID and
+  name are pseudonymous identifiers needed for abuse prevention (ban-evasion
+  detection, bans, connect filters).
+- **IP retention (configurable, ships with 1.0.6):** stored player IPs are
+  automatically cleared after **90 days of inactivity** (configurable under
+  Settings -> General, `0` = keep forever). Active IP bans are never
+  affected - an IP ban stays as long as the ban does. The IP-change history
+  only records *that* an IP changed, not the actual addresses. (This note is
+  published ahead of the 1.0.6 binary so the data-handling is transparent up
+  front.)
+- **Transfer to third parties:** geolocation lookups send the player **IP**
+  to [ip-api.com](https://ip-api.com); Steam lookups send the **Steam-ID**
+  to the official Steam Web API. Both only happen for players connecting to
+  servers you manage, and results are cached locally.
+- **You are the data controller.** This tool is run on your own machine and
+  stores data only there - the author never receives any of it. Handling
+  access or deletion requests (GDPR Art. 15/17) for your players is your
+  responsibility as the server operator. You can clear individual entries
+  by editing `resthirnrcon.db` directly, and player IPs age out automatically
+  via the retention setting above.
 - **No passwords are stored in `resthirnrcon.db`** (since 1.0.4). The
   RCon password and the MySQL password (if you use the MySQL provider)
   are both read from environment variables on every connect. The tool

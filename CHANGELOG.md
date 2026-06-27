@@ -4,6 +4,30 @@ All notable changes to RHD-RCON are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses semantic-ish versioning (`major.minor.patch`).
 
+## 1.0.6 - upcoming
+
+> [!NOTE]
+> This entry is published ahead of the binary for transparency. The
+> configurable IP-retention routine ships with the **1.0.6** release; the
+> documentation below already describes the final behaviour.
+
+### Added
+
+- **IP retention (GDPR data minimization).** Stored player IPs are
+  automatically cleared after a configurable period of inactivity
+  (Settings -> General -> "IP retention (days)", default **90**, `0` =
+  keep forever). The retention is measured against a player's last-seen
+  time, so regulars who keep playing are not affected. Active IP bans are
+  never touched - an IP ban stays as long as the ban does.
+- The player IP-change history now records only **that** an IP changed,
+  not the actual addresses. Existing raw IPs in the change log are
+  anonymized once on first start (schema migration v19 -> v20). The
+  "this player keeps changing IPs" signal is preserved.
+
+See the updated **Privacy and data** section in the README for the full
+picture of what is stored, what is sent to third parties (ip-api.com /
+Steam Web API), and who is responsible for handling player data requests.
+
 ## 1.0.4 - 2026-05-19
 
 > [!WARNING]
