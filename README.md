@@ -285,16 +285,16 @@ step by step.
 
 ## Source code and license
 
-The source code is currently **not public**. Only the compiled Windows EXE
-is distributed via GitHub Releases under "all rights reserved" terms - the
-binary may be downloaded, run and redistributed in its original form,
-but no derivative works. The server-side integration files in
-`server-integration/` are free to copy and adapt as needed.
+The source code is **not public** and there are no plans to open it.
+Only the compiled Windows EXE is distributed via GitHub Releases under
+"all rights reserved" terms - the binary may be downloaded, run and
+redistributed in its original form, but no derivative works.
+
+The server-side integration files in `server-integration/` are a
+different matter: they are meant to be installed on your own DayZ server
+and are free to copy, modify and adapt.
 
 Full terms in [LICENSE](LICENSE).
-
-Once the codebase reaches a quality level I am comfortable sharing
-publicly, the source will be opened under a permissive license.
 
 ## About this project
 
