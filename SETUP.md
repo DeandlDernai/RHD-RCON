@@ -65,10 +65,17 @@ Server mode on top of the client-mode steps:
 1. Run the EXE **as Administrator** (needed for the restart scripts).
 2. First-run wizard: pick **Server**.
 3. Configure the **Steam-ID provider per server** (optional, only if
-   you want Steam-ID resolution) in the Add/Edit-Server dialog. Two
-   providers ship in 1.0.4:
-   - **`none`** (default) - no Steam-ID lookup. Pick this for Reforger,
-     DayZ Standalone, or any server that has no MySQL Hive.
+   you want Steam-ID resolution) in the Add/Edit-Server dialog. Three
+   providers ship in 1.0.6:
+   - **`none`** (default) - no Steam-ID lookup. Pick this for DayZ
+     Standalone or any server that has no Steam-ID source.
+   - **`reforger_loginlog`** - for Arma Reforger. Enter the full path to
+     the `logins.jsonl` written by the `RHD_ReforgerRconSupport` mod,
+     normally
+     `<instance>\Profile\profile\RHD_Logins\logins.jsonl`. The tool reads
+     the newest line per backend UUID and stores UUID / Steam-ID / name.
+     That mod is not published yet, so for now pick `none` on Reforger
+     unless you already run it.
    - **`mysql`** - enter Host / Port / Database / User of your Epoch
      (or Arma 3 Hive) DB. The password is read from an environment
      variable: the tool combines the hardcoded prefix
@@ -91,7 +98,7 @@ password, open the server-edit dialog and fill in a suffix (e.g. `_DE`
 
 ## Server-side prerequisites
 
-For most features RHD-RCON only needs the BattlEye RCon password. Two
+For most features RHD-RCON only needs the BattlEye RCon password. A few
 optional capabilities need server-side preparation:
 
 ### A) Steam-ID resolution (server mode, `mysql` provider)
@@ -227,6 +234,18 @@ identification. Add / remove is audit-logged as `Whitelist-Add` /
 the audit log is GUID-keyed).
 
 
+### D) Arma Reforger (optional)
+
+- **Steam-ID + chat:** these need the `RHD_ReforgerRconSupport` server
+  mod, which is **still in development and not published yet**. Once it
+  is out, you add its mod ID to `game.mods` in `config.json`, restart,
+  and check for `[RHD_Rcon] Login-Logger` in the server log. Until then,
+  Reforger servers run without Steam-ID resolution and without chat.
+- **Player IP + country flag:** no mod needed, but RHD-RCON must run in
+  server mode with read access to the BattlEye log folder of the server
+  instance. The tool picks the newest `logs_*` folder and only tails the
+  last 256 KB of `console.log`, so big logs stay cheap.
+
 ## Configuration reference
 
 ### General tab
@@ -281,8 +300,11 @@ Fields are self-explanatory. A few things worth knowing:
 - **Tab order** (since 1.0.4) - small `<` / `>` buttons in each tab
   header move the tab left/right. The order is persisted across restarts.
 - **Steam-ID provider** (since 1.0.4) - per-server plugin:
-  - **`none`** - no lookup. Pick this for Reforger / DayZ Standalone /
-    any server without an Epoch-style MySQL Hive.
+  - **`none`** - no lookup. Pick this for DayZ Standalone or any server
+    without an Epoch-style MySQL Hive.
+  - **`reforger_loginlog`** (since 1.0.6) - for Arma Reforger. Path to
+    the `logins.jsonl` written by the `RHD_ReforgerRconSupport` mod. See
+    [D) Arma Reforger](#d-arma-reforger-optional).
   - **`mysql`** - reads `player_login_log` from your DB. You enter
     Host/Port/Database/User and a **password env-var suffix**:
     - The tool combines the hardcoded prefix `RH_MYSQL_PASSWORD` with

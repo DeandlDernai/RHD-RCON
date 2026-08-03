@@ -52,9 +52,11 @@ stabilized:
   mostly in chat parsing, kick/ban admin labels and the server log format.
 - **Arma 3** - BattlEye RCon. Same protocol; player list and admin chat
   formats differ. Mainly a parsing / labels question.
-- **Arma Reforger** - BattlEye RCon protocol is supported. Open
-  question is how to feed useful per-player data (Steam-ID etc.) into
-  the tool without impacting server performance.
+- **Arma Reforger** - **shipped in 1.0.6**: player list, kick, ban,
+  unban, ban list, and player IP + country flag from the BattlEye log.
+  Still open: Steam-ID resolution and chat need a companion server mod
+  (`RHD_ReforgerRconSupport`) that is in development and not published
+  yet. The tool side for both is already in 1.0.6.
 
 These are listed here as direction, not as committed milestones - they
 will be tackled after the DayZ Mod (Arma 2 OA) workflow is feature

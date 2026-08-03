@@ -1,8 +1,8 @@
 # RHD-RCON
 
-A BattlEye RCon tool for **DayZ Epoch** server admins, with a plugin
-architecture for other BattlEye-based games (Arma 3, DayZ Standalone,
-Arma Reforger, Arma 4) coming via per-server Steam-ID providers.
+A BattlEye RCon tool for **DayZ Epoch** and **Arma Reforger** server
+admins, with a plugin architecture for other BattlEye-based games
+(Arma 3, DayZ Standalone, Arma 4) via per-server Steam-ID providers.
 
 Live player monitoring, ban management with multi-server sync, scheduled
 messages, scheduled shutdowns, server-process watchdog (auto-restart on
@@ -46,6 +46,26 @@ comfortable with:
 If you only need the occasional broadcast, a basic RCon tool is simpler.
 RHD-RCON shines when you run multiple servers, want a shared ban list, or
 care about who connected when.
+
+## Arma Reforger
+
+Since 1.0.6 a server can be set to game type **Arma Reforger** in the
+Add/Edit-Server dialog.
+
+| Feature | Status |
+|---|---|
+| Player list, kick, ban, unban, ban list | works today |
+| Player IP + country flag (server mode) | works today |
+| Steam-ID resolution | needs the companion mod - **work in progress** |
+| Chat: broadcast / warning / info / PM | needs the companion mod - **work in progress** |
+
+Reforger has no vanilla RCon chat command, and it never exposes a
+player's Steam-ID over RCon. Both are closed by a companion server mod
+(`RHD_ReforgerRconSupport`) that adds the chat commands and writes a
+login log (`logins.jsonl`) mapping backend UUID -> Steam-ID. That mod is
+**still in development and not published yet** - the tool side is
+finished and already in 1.0.6, so those two features light up as soon as
+the mod is out. This page will link it once it is public.
 
 ## What you need to set it up
 

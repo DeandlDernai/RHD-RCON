@@ -4,14 +4,35 @@ All notable changes to RHD-RCON are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses semantic-ish versioning (`major.minor.patch`).
 
-## 1.0.6 - upcoming
-
-> [!NOTE]
-> This entry is published ahead of the binary for transparency. The
-> configurable IP-retention routine ships with the **1.0.6** release; the
-> documentation below already describes the final behaviour.
+## 1.0.6 - 2026-08-03
 
 ### Added
+
+- **Arma Reforger support.** Every server now has a **game type**
+  (`Arma 2` / `Arma Reforger`) in the Add/Edit-Server dialog. With
+  Reforger selected, RHD-RCON talks to the server the way Reforger
+  expects:
+  - **Player list** with in-game player ID, backend UUID and name.
+  - **Kick, ban, unban and ban list.** Reforger keeps bans in its backend
+    (there is no `bans.txt`), so the ban list is read back from the
+    server page by page - 25 entries per page, capped at 100 pages
+    (2500 bans). You get a warning in the action log if that cap is hit.
+  - **IP address and country flag**, read from the BattlEye `console.log`
+    of the server (server mode only - the tool needs access to the BE
+    log folder). Reforger itself never exposes a player IP over RCon.
+  - **Steam-ID resolution** through the new `reforger_loginlog` provider
+    and **chat** (broadcast, warning, info, private message) - both
+    require a companion server mod that is not public yet, see below.
+
+> [!NOTE]
+> **Two Reforger features are still waiting on a server mod.** Reforger
+> has no vanilla RCon chat command at all, and it never hands a player's
+> Steam-ID to RCon. Both gaps are closed by a companion server mod
+> (`RHD_ReforgerRconSupport`) that is **still in development and not
+> published yet**. The tool side is ready and ships in 1.0.6 - the two
+> features simply have nothing to talk to until the mod is out.
+> Everything else (player list, kick, ban, unban, ban list, IP and
+> country flag) works against a plain, unmodded Reforger server today.
 
 - **IP retention (GDPR data minimization).** Stored player IPs are
   automatically cleared after a configurable period of inactivity
@@ -27,6 +48,76 @@ uses semantic-ish versioning (`major.minor.patch`).
 See the updated **Privacy and data** section in the README for the full
 picture of what is stored, what is sent to third parties (ip-api.com /
 Steam Web API), and who is responsible for handling player data requests.
+
+### Fixed
+
+> [!WARNING]
+> **Temporary bans were removed again seconds after being set (Arma 2).**
+> The ban sync read BattlEye's "minutes left" column as if it were a Unix
+> timestamp, so *every* temporary ban counted as already expired and was
+> purged from `bans.txt` on the next sync - including bans you set by
+> hand in-game. Only permanent bans survived. This affects 1.0.5 and
+> earlier: until you upgrade, use permanent bans only.
+
+- The action log no longer prints misleading `[removed]` / `[restored]`
+  lines right after a ban. A post-ban comparison reported changes that
+  had never happened on the server.
+- The selected player is no longer lost when the player list
+  auto-refreshes.
+- The player-count badge in the server tab showed only the first digit
+  (60 players -> "6").
+- Kicking or banning could crash with a NullReferenceException when the
+  selection changed while the command was being sent.
+
+### Changed
+
+- Ban purging and player-list merging moved into separate, testable
+  components and are now covered by regression tests (412 tests total).
+
+### Known limitations
+
+- **Reforger, very large player lists.** Reforger sends the player list
+  as a server message, which - unlike a normal command response - carries
+  no "part 1 of n" header. If a server ever splits that response across
+  several UDP packets, only the first packet is read. Not observed on our
+  servers so far. The ban list is unaffected because it is paginated.
+
+### Upgrading
+
+Schema migrations v18 -> v20 run automatically on first start. A backup
+of the pre-migration database is written to `backups/` next to the EXE.
+
+## 1.0.5 - 2026-06-23
+
+### Added
+
+- **Country auto-kick** with a global whitelist (schema v14). Players
+  connecting from a blocked country are kicked automatically; whitelisted
+  players are exempt.
+- **Whitelist as its own tab**, matching on Steam-ID, plus a per-server
+  kick message (schema v15).
+- **Name filter** - block player names by Unicode range, symbols or
+  pattern, with an audit log of every hit (schema v16).
+- Action-log entries for country kicks and whitelist add/remove.
+- Online player count as an accent pill in the server tab header.
+
+### Changed
+
+- Per-server filter settings now apply to a running session immediately -
+  no reconnect needed.
+- The Add/Edit-Server dialog is split into five tabs (Connection /
+  Behavior / Filters / Steam-ID / Watchdog).
+- Remaining UI strings switched to English; the Debug-Log tab was removed
+  (debug output goes to the log file).
+- `servers.admin_name` removed (schema v17).
+
+### Fixed
+
+- Chat auto-scrolls to the newest message again.
+- The shutdown scheduler's "Last run" column updates live instead of only
+  after a restart.
+- Hint boxes in the Country/Name filter tabs are readable in both light
+  and dark theme.
 
 ## 1.0.4 - 2026-05-19
 
