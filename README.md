@@ -99,8 +99,8 @@ walkthrough in [SETUP.md](SETUP.md).
 | What | Where from |
 |---|---|
 | **RCon Host / Port** | The server admin (your `BEServer.cfg` `RConPort`) |
-| **RCon Password (env-var, since 1.0.4)** | The server admin (your `BEServer.cfg` `RConPassword`). Stored as an environment variable on **your PC**, never in `resthirnrcon.db`. The tool reads `RH_RCON_PASSWORD` plus a per-server **suffix** you set in the dialog (empty suffix = `RH_RCON_PASSWORD`, suffix `_S2` = `RH_RCON_PASSWORD_S2`, etc.) |
-| **A PlayerDB export from a server admin** (optional, for VAC / Game-Ban badges) | The Client EXE has no Settings -> Steam tab (no Steam Web API key field) - it only *shows* SteamIDs and VAC/Game-Ban badges for players a Server EXE already resolved and exported. See [Import a PlayerDB JSON](TESTPLAN_CLIENT.md) below |
+| **RCon Password (env-var)** | The server admin (your `BEServer.cfg` `RConPassword`). Stored as an environment variable on **your PC**, never in `resthirnrcon.db`. The tool reads `RH_RCON_PASSWORD` plus a per-server **suffix** you set in the dialog (empty suffix = `RH_RCON_PASSWORD`, suffix `_S2` = `RH_RCON_PASSWORD_S2`, etc.) |
+| **A PlayerDB export from a server admin** (optional, for VAC / Game-Ban badges) | The Client EXE has no Settings -> Steam tab (no Steam Web API key field) - it only *shows* SteamIDs and VAC/Game-Ban badges for players a Server EXE already resolved and exported. See [TESTPLAN_CLIENT.md](TESTPLAN_CLIENT.md), section 4.4 |
 
 **Server EXE** (you run RHD-RCON on your own server PC - see
 ["Client vs. Server"](#client-vs-server---which-one-do-i-need) above for
@@ -116,120 +116,38 @@ plus:
 
 ## Features
 
-- **Player management** - live list with country flag, Steam-ID, right-click
-  for kick/ban/PM/comment. Whitelist-star column shows protected players
-  at a glance.
+- **Player management** - live list with country flag, Steam-ID,
+  online-player-count badge, right-click for kick/ban/PM/comment/whitelist.
+  Reorderable, color-coded server tabs.
 - **Ban management** - BattlEye GUID bans, multi-server ban sync, offline
-  queue (bans get applied to servers that come back online later)
+  queue (bans get applied to servers that come back online later).
 - **Player database** - cross-server, name- and IP-change history, action
-  log per player. Audit entries for connect-filter kicks (Country-Kick /
-  Name-Kick) and whitelist add/remove show up in the player action log.
-- **Connect filters** (Server EXE only, since 1.0.5):
-  - **Country filter** - allow- or blocklist of ISO country codes for
-    curating who plays on your server (community language, admin-team
-    timezone, whitelisted-server setups), with a configurable per-server
-    kick message you can use to explain why and point kicked players at
-    your whitelist process instead of just turning them away. See
-    SETUP.md ["Connect filters"](SETUP.md#c-connect-filters-server-exe)
-    for the full picture of what it is and is not for.
-  - **Name filter** - allowed Unicode block (Ascii / Latin /
-    LatinCyrillic / Any), max special-char ratio, and a forbidden
-    substring pattern list (e.g. `admin,discord.gg`). Kicks unlesbare
-    or impersonating names on connect.
-  - **Whitelist** - dedicated tab on the left with its own grid (GUID
-    and/or SteamID, free-form note, AddedAt timestamp). Match is
-    GUID-OR-SteamID, so partial info is enough. Four ways to add an
-    entry: the whitelist tab itself, Settings -> Country Filter,
-    right-click in the Players view, right-click in the Player DB.
-    Whitelist is enforced **for the country filter only** - the name
-    filter is absolute (even admins must have readable names).
-- **Scheduler** (Server EXE only) - scheduled chat broadcasts, daily server
-  restarts with warn broadcasts + clean process kill. Live `Last run`
-  timestamp updates without leaving the tab.
-- **Server-process watchdog** (Server EXE only) - polls the configured
-  game-server process every 20s and runs your restart script if it has
-  died (with cooldown to prevent restart loops)
-- **IP ban list** (Server EXE only) - in-tool IP-ban table, players with
-  banned IPs get kicked on the next refresh (the kick message is
-  configurable - keep it generic to hide that it is an IP ban)
-- **Chat view** - selectable text (Ctrl+C to copy), filter checkboxes per
-  log type (Global / Side / Direct / Vehicle / Group / Command / Admin),
-  smart auto-scroll that follows new messages when you are at the bottom
-  and stays put when you scrolled up to read history, Enter = Send in
-  the broadcast input and the PM dialog (Shift+Enter for newline).
-- **Server tab header** - online-player-count badge in the accent color
-  next to the tab name; short-lived `+1` / `-2` delta marker after
-  changes makes connects and disconnects easy to spot across tabs.
-- **Two EXEs** (since 1.0.7, see ["Client vs.
-  Server"](#client-vs-server---which-one-do-i-need) above):
-  - **Client EXE:** GUI for managing someone else's server. Has its own
-    local SQLite (server configs, settings, local geo cache, imported
-    player data, ban-sync queue). Multi-server ban sync and offline bans
-    work here too - any server you are connected to (or that comes back
-    online later) gets the queued ban. What the Client EXE does *not*
-    have: scheduler, server-process watchdog, IP-ban enforcement,
-    country / name connect-filters, whitelist tab, player DB writes
-    from live data (only via import from a server admin), MySQL
-    Steam-ID resolution.
-  - **Server EXE:** everything above plus scheduler, server-process
-    watchdog, IP-ban enforcement, country / name connect-filters,
-    whitelist tab, full player DB writes from live data, per-server
-    Steam-ID resolution (MySQL provider in 1.0.4; more providers
-    planned for other games). Runs on the server PC itself, requires
-    the config/DB access described above.
+  log per player, JSON export (Server EXE) / import (both EXEs) so a
+  Client admin can see SteamIDs and Steam bans a Server EXE already
+  resolved.
+- **Connect filters** (Server EXE only) - country allow/blocklist and a
+  name filter (allowed Unicode block, symbol ratio, forbidden patterns),
+  each with a configurable per-server kick message. A whitelist (match by
+  GUID or SteamID) exempts individual players from the country filter.
+  See SETUP.md ["Connect filters"](SETUP.md#c-connect-filters-server-exe)
+  for what this is for and what it is not for.
+- **Scheduler** (Server EXE only) - scheduled chat broadcasts and daily
+  server restarts (warn broadcasts + clean process kill).
+- **Server-process watchdog** (Server EXE only) - restarts the game
+  server process if it dies, with a cooldown against restart loops.
+- **IP ban list** (Server EXE only) - in-tool IP-ban enforcement, since
+  BattlEye/ArmA 2 has no IP-ban mechanism of its own.
+- **Chat view** - selectable text, per-log-type filters, smart
+  auto-scroll, Enter-to-send in broadcast and PM.
+- **Per-server Steam-ID provider** - each server picks its own source
+  (`none`, `mysql` for Epoch/Arma 3 Hive DBs, `reforger_loginlog` for
+  Arma Reforger); more providers land without a database migration.
+- **RCon password and MySQL password never touch `resthirnrcon.db`** -
+  both are read from OS environment variables on every connect. See
+  [Environment variables](SETUP.md#environment-variables) in SETUP.md.
 
-- **Per-server Steam-ID provider** (since 1.0.4) - each server picks
-  its own Steam-ID source. Two providers ship in 1.0.4:
-  - **`none`** - no Steam-ID lookup. Default for servers that have no
-    DB (Reforger, DayZ Standalone, fresh setups).
-  - **`mysql`** - reads `player_login_log` from your Epoch/Arma 3 Hive
-    DB. Each server has its own DB connection and its own password,
-    so you can run multiple servers against different databases from
-    one tool instance.
-  Future providers (BattlEye-RCon Steam-ID parser, FileWatcher for
-  Reforger/Standalone, HTTP bridge) are plugin-style additions - no
-  database migration needed when they land.
-
-- **Reorder server tabs** (since 1.0.4) - small `<` / `>` buttons in
-  each tab header move the tab left/right. The order is persisted, so
-  your favourite server can stay first across restarts.
-
-- **RCon password from env-var** (since 1.0.4, **breaking change**) -
-  the RCon password is no longer stored in `resthirnrcon.db`. Each
-  server defines an env-var suffix (empty = `RH_RCON_PASSWORD`,
-  `_S2` = `RH_RCON_PASSWORD_S2`, etc.). The tool reads the variable
-  on every connect. Upgrade path: set the env-var(s) on your OS and
-  enter the matching suffix in the Edit-Server dialog. See the
-  [CHANGELOG](CHANGELOG.md) for the migration steps.
-
-- **Country / Name auto-kick + Whitelist** (since 1.0.5, Server EXE only) -
-  kick players on connect by country code or name pattern with a
-  configurable per-server message. A separate whitelist tab protects
-  individual players from the country filter (match by GUID or
-  SteamID). Setup pointers in [SETUP.md](SETUP.md#c-connect-filters-server-exe);
-  test steps in [TESTPLAN_SERVER.md](TESTPLAN_SERVER.md).
-
-- **Server-Edit dialog with tabs** (since 1.0.5) - the Add/Edit-Server
-  dialog is now split into **Connection**, **Behavior**, **Filters**
-  (Server EXE), **Steam-ID** (Server EXE) and **Watchdog** (Server EXE).
-  Easier to find a single setting and easier to skim what each
-  server is configured for.
-
-- **Chat improvements** (since 1.0.5) - selectable text + Ctrl+C, filter
-  checkboxes per log type, smart auto-scroll (follows the live stream
-  at the bottom, holds position when you scrolled up), Enter sends in
-  both the broadcast input and the PM dialog (Shift+Enter for newline).
-
-- **Online player count badge** (since 1.0.5) - each connected server
-  tab shows a small accent-colored pill with the live player count,
-  plus a short-lived `+1` / `-2` delta after changes.
-
-- **Global admin names** (since 1.0.5, schema V17) - the per-server
-  `admin_name` column is gone. Two global names live under Settings ->
-  General: the **Client admin name** for manual actions (chat / PM /
-  kick / ban) and the **Server admin name** (default `RESTHIRN`) for
-  automated actions (scheduler, ban sync, country/name kicks). Changes
-  take effect after a server disconnect + reconnect.
+Full field-by-field configuration reference is in [SETUP.md](SETUP.md);
+version-by-version history is in [CHANGELOG.md](CHANGELOG.md).
 
 ## Download
 
@@ -282,13 +200,11 @@ you through every feature step by step.
   enable Steam lookups - the Steam-ID and cached Steam profile. GUID and
   name are pseudonymous identifiers needed for abuse prevention (ban-evasion
   detection, bans, connect filters).
-- **IP retention (configurable, ships with 1.0.6):** stored player IPs are
-  automatically cleared after **90 days of inactivity** (configurable under
-  Settings -> General, `0` = keep forever). Active IP bans are never
-  affected - an IP ban stays as long as the ban does. The IP-change history
-  only records *that* an IP changed, not the actual addresses. (This note is
-  published ahead of the 1.0.6 binary so the data-handling is transparent up
-  front.)
+- **IP retention (configurable):** stored player IPs are automatically
+  cleared after **90 days of inactivity** (Settings -> General, `0` =
+  keep forever). Active IP bans are never affected - an IP ban stays as
+  long as the ban does. The IP-change history only records *that* an IP
+  changed, not the actual addresses.
 - **Transfer to third parties:** geolocation lookups send the player **IP**
   to [ip-api.com](https://ip-api.com); Steam lookups send the **Steam-ID**
   to the official Steam Web API. Both only happen for players connecting to
@@ -299,12 +215,9 @@ you through every feature step by step.
   responsibility as the server operator. You can clear individual entries
   by editing `resthirnrcon.db` directly, and player IPs age out automatically
   via the retention setting above.
-- **No passwords are stored in `resthirnrcon.db`** (since 1.0.4). The
-  RCon password and the MySQL password (if you use the MySQL provider)
-  are both read from environment variables on every connect. The tool
-  builds the variable name from a fixed prefix (`RH_RCON_PASSWORD` /
-  `RH_MYSQL_PASSWORD`) plus a per-server **suffix** you set in the
-  Edit-Server dialog. Back up `resthirnrcon.db` freely.
+- **No passwords are stored in `resthirnrcon.db`.** The RCon password and
+  the MySQL password (if you use the MySQL provider) are both read from
+  environment variables on every connect. Back up `resthirnrcon.db` freely.
 - Steam-ID lookups (Server EXE, when the MySQL provider is enabled on
   a server) go to your own MySQL database. Requires one-time server-side
   setup (MySQL table + SQF hook in `dayz_server.pbo`) - see
