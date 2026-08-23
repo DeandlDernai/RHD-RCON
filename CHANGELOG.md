@@ -4,6 +4,29 @@ All notable changes to RHD-RCON are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses semantic-ish versioning (`major.minor.patch`).
 
+## 1.0.7 - 2026-08-23
+
+### Changed
+
+- **Two separate EXEs instead of one app with a mode switch.** RHD-RCON is
+  now `RHD-RCON-Client` and `RHD-RCON-Server` - two downloads, each built
+  for one role. There is no more in-app Client/Server toggle and no more
+  mode step in the first-run wizard; which EXE you run **is** the mode.
+  See README ["Client vs. Server"](README.md#client-vs-server---which-one-do-i-need)
+  for which one you need, and SETUP.md ["Upgrading from 1.0.6 or
+  earlier"](SETUP.md#upgrading-from-106-or-earlier-two-exes-since-107) if
+  you are coming from the combined EXE.
+  - Feature split is unchanged from the old Client/Server modes - the
+    Server EXE has everything the Client EXE has, plus scheduler,
+    watchdog, IP-ban enforcement, connect filters, live player-DB writes
+    and MySQL/Reforger Steam-ID resolution.
+  - **No database migration.** Both EXEs use the same SQLite schema as
+    before - point the new EXE at your existing `resthirnrcon.db` and it
+    picks up right where the old one left off.
+  - Releases now ship four assets (Client ZIP/EXE + Server ZIP/EXE)
+    instead of two - see the [Download](README.md#download) section.
+  - Test plans renamed to match: `TESTPLAN.md` -> `TESTPLAN_CLIENT.md`.
+
 ## 1.0.6 - 2026-08-03
 
 ### Added

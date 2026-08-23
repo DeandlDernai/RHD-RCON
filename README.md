@@ -6,8 +6,30 @@ admins, with a plugin architecture for other BattlEye-based games
 
 Live player monitoring, ban management with multi-server sync, scheduled
 messages, scheduled shutdowns, server-process watchdog (auto-restart on
-crash) and a cross-server player database - all in a single Windows EXE,
-no install.
+crash) and a cross-server player database - as two purpose-built Windows
+EXEs, no install.
+
+## Client vs. Server - which one do I need?
+
+Since 1.0.7 RHD-RCON ships as **two separate EXEs** instead of one app
+with a mode switch. Pick the download that matches your role:
+
+- **`RHD-RCON-Client`** - you manage someone else's server. All you need
+  is the RCon password; no access to the server PC itself required.
+- **`RHD-RCON-Server`** - you **are** the operator of the server PC. This
+  EXE is built to run *on that machine* (or somewhere with admin rights on
+  it and network access to its RCon/MySQL/log files) - it needs to be
+  able to configure things there (restart scripts, scheduled tasks) and
+  to reach the server's own data (the MySQL Hive DB if you use the
+  `mysql` Steam-ID provider, or the BattlEye console log for Reforger IP
+  lookups). **It is not a "more powerful client" you can run from any PC**
+  - the extra features it unlocks (scheduler, watchdog, IP-ban
+  enforcement, connect filters, live player-DB writes) all depend on that
+  server-side access.
+
+If you are unsure which one applies to you: if you only ever type an RCon
+password into a config file and never touch the server's own filesystem
+or database, you want the Client EXE.
 
 ## Status
 
@@ -20,12 +42,12 @@ I would really appreciate it if you could walk through the test plan
 on your setup and let me know what works, what does not, and what
 feels off. Two short plans depending on how you use the tool:
 
-- **[TESTPLAN.md](TESTPLAN.md)** - if you manage someone else's server
-  via RCon (client mode). ~15-20 minutes.
-- **[TESTPLAN_SERVER.md](TESTPLAN_SERVER.md)** - if you run RHD-RCON
-  on your own server PC. Covers the server-only features (scheduler,
-  watchdog, IP ban, MySQL Steam-ID resolution) on top of the client
-  plan. ~10-15 minutes extra.
+- **[TESTPLAN_CLIENT.md](TESTPLAN_CLIENT.md)** - for the Client EXE, if
+  you manage someone else's server via RCon. ~15-20 minutes.
+- **[TESTPLAN_SERVER.md](TESTPLAN_SERVER.md)** - for the Server EXE, if
+  you run RHD-RCON on your own server PC. Covers the server-only features
+  (scheduler, watchdog, IP ban, MySQL Steam-ID resolution) on top of the
+  client plan. ~10-15 minutes extra.
 
 Both plans (and SETUP.md / PLANNED.md) are also shipped inside the
 release ZIP, so you have them offline next to the EXE. Feedback from
@@ -55,7 +77,7 @@ Add/Edit-Server dialog.
 | Feature | Status |
 |---|---|
 | Player list, kick, ban, unban, ban list | works today |
-| Player IP + country flag (server mode) | works today |
+| Player IP + country flag (Server EXE) | works today |
 | Steam-ID resolution | needs the companion mod - **work in progress** |
 | Chat: broadcast / warning / info / PM | needs the companion mod - **work in progress** |
 
@@ -69,10 +91,10 @@ the mod is out. This page will link it once it is public.
 
 ## What you need to set it up
 
-Different modes need different things ready before you start. Full
+The two EXEs need different things ready before you start. Full
 walkthrough in [SETUP.md](SETUP.md).
 
-**Client mode** (you manage someone else's server via RCon):
+**Client EXE** (you manage someone else's server via RCon):
 
 | What | Where from |
 |---|---|
@@ -80,8 +102,10 @@ walkthrough in [SETUP.md](SETUP.md).
 | **RCon Password (env-var, since 1.0.4)** | The server admin (your `BEServer.cfg` `RConPassword`). Stored as an environment variable on **your PC**, never in `resthirnrcon.db`. The tool reads `RH_RCON_PASSWORD` plus a per-server **suffix** you set in the dialog (empty suffix = `RH_RCON_PASSWORD`, suffix `_S2` = `RH_RCON_PASSWORD_S2`, etc.) |
 | **Steam Web API key** (optional, for VAC / Game-Ban lookups) | [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey) |
 
-**Server mode** (you run RHD-RCON on your own server PC). Everything
-from client mode, plus:
+**Server EXE** (you run RHD-RCON on your own server PC - see
+["Client vs. Server"](#client-vs-server---which-one-do-i-need) above for
+why this one needs server-side access). Everything from the Client EXE,
+plus:
 
 | What | Where from |
 |---|---|
@@ -99,7 +123,7 @@ from client mode, plus:
 - **Player database** - cross-server, name- and IP-change history, action
   log per player. Audit entries for connect-filter kicks (Country-Kick /
   Name-Kick) and whitelist add/remove show up in the player action log.
-- **Connect filters** (server mode only, since 1.0.5):
+- **Connect filters** (Server EXE only, since 1.0.5):
   - **Country filter** - allow- or blocklist of ISO country codes, kicks
     on connect with a configurable per-server message.
   - **Name filter** - allowed Unicode block (Ascii / Latin /
@@ -113,13 +137,13 @@ from client mode, plus:
     right-click in the Players view, right-click in the Player DB.
     Whitelist is enforced **for the country filter only** - the name
     filter is absolute (even admins must have readable names).
-- **Scheduler** (server mode only) - scheduled chat broadcasts, daily server
+- **Scheduler** (Server EXE only) - scheduled chat broadcasts, daily server
   restarts with warn broadcasts + clean process kill. Live `Last run`
   timestamp updates without leaving the tab.
-- **Server-process watchdog** (server mode only) - polls the configured
+- **Server-process watchdog** (Server EXE only) - polls the configured
   game-server process every 20s and runs your restart script if it has
   died (with cooldown to prevent restart loops)
-- **IP ban list** (server mode only) - in-tool IP-ban table, players with
+- **IP ban list** (Server EXE only) - in-tool IP-ban table, players with
   banned IPs get kicked on the next refresh (the kick message is
   configurable - keep it generic to hide that it is an IP ban)
 - **Chat view** - selectable text (Ctrl+C to copy), filter checkboxes per
@@ -130,21 +154,23 @@ from client mode, plus:
 - **Server tab header** - online-player-count badge in the accent color
   next to the tab name; short-lived `+1` / `-2` delta marker after
   changes makes connects and disconnects easy to spot across tabs.
-- **Two modes:**
-  - **Client mode:** GUI for managing someone else's server. Has its own
+- **Two EXEs** (since 1.0.7, see ["Client vs.
+  Server"](#client-vs-server---which-one-do-i-need) above):
+  - **Client EXE:** GUI for managing someone else's server. Has its own
     local SQLite (server configs, settings, local geo cache, imported
     player data, ban-sync queue). Multi-server ban sync and offline bans
-    work in client mode too - any server you are connected to (or that
-    comes back online later) gets the queued ban. What client mode does
-    *not* do: scheduler, server-process watchdog, IP-ban enforcement,
+    work here too - any server you are connected to (or that comes back
+    online later) gets the queued ban. What the Client EXE does *not*
+    have: scheduler, server-process watchdog, IP-ban enforcement,
     country / name connect-filters, whitelist tab, player DB writes
     from live data (only via import from a server admin), MySQL
     Steam-ID resolution.
-  - **Server mode:** everything above plus scheduler, server-process
+  - **Server EXE:** everything above plus scheduler, server-process
     watchdog, IP-ban enforcement, country / name connect-filters,
     whitelist tab, full player DB writes from live data, per-server
     Steam-ID resolution (MySQL provider in 1.0.4; more providers
-    planned for other games).
+    planned for other games). Runs on the server PC itself, requires
+    the config/DB access described above.
 
 - **Per-server Steam-ID provider** (since 1.0.4) - each server picks
   its own Steam-ID source. Two providers ship in 1.0.4:
@@ -170,17 +196,17 @@ from client mode, plus:
   enter the matching suffix in the Edit-Server dialog. See the
   [CHANGELOG](CHANGELOG.md) for the migration steps.
 
-- **Country / Name auto-kick + Whitelist** (since 1.0.5, server mode only) -
+- **Country / Name auto-kick + Whitelist** (since 1.0.5, Server EXE only) -
   kick players on connect by country code or name pattern with a
   configurable per-server message. A separate whitelist tab protects
   individual players from the country filter (match by GUID or
-  SteamID). Setup pointers in [SETUP.md](SETUP.md#c-connect-filters-server-mode);
+  SteamID). Setup pointers in [SETUP.md](SETUP.md#c-connect-filters-server-exe);
   test steps in [TESTPLAN_SERVER.md](TESTPLAN_SERVER.md).
 
 - **Server-Edit dialog with tabs** (since 1.0.5) - the Add/Edit-Server
   dialog is now split into **Connection**, **Behavior**, **Filters**
-  (server mode), **Steam-ID** (server mode) and **Watchdog** (server
-  mode). Easier to find a single setting and easier to skim what each
+  (Server EXE), **Steam-ID** (Server EXE) and **Watchdog** (Server EXE).
+  Easier to find a single setting and easier to skim what each
   server is configured for.
 
 - **Chat improvements** (since 1.0.5) - selectable text + Ctrl+C, filter
@@ -202,35 +228,44 @@ from client mode, plus:
 ## Download
 
 Get the latest build from the
-[Releases page](https://github.com/DeandlDernai/RHD-RCON/releases).
+[Releases page](https://github.com/DeandlDernai/RHD-RCON/releases). See
+["Client vs. Server"](#client-vs-server---which-one-do-i-need) above if
+you are not sure which one you need.
 
-Each release ships two assets:
+Each release ships **four assets** - a ZIP and a bare EXE for each of the
+two roles:
 
-- `RHD-RCON_v1.0.x.zip` - EXE + all docs (`README.md`, `SETUP.md`,
-  `TESTPLAN.md`, `TESTPLAN_SERVER.md`, `PLANNED.md`, `CHANGELOG.md`) +
-  `server-integration/` folder + `.sha256`. Recommended - you get
-  everything offline next to the EXE.
-- `RHD-RCON_v1.0.x.exe` - the bare EXE if you just want a quick update.
+- `RHD-RCON-Client_v1.0.x.zip` - EXE + all docs (`README.md`, `SETUP.md`,
+  `TESTPLAN_CLIENT.md`, `PLANNED.md`, `CHANGELOG.md`) + `.sha256`.
+  Recommended - you get everything offline next to the EXE.
+- `RHD-RCON-Client_v1.0.x.exe` - the bare Client EXE if you just want a
+  quick update.
+- `RHD-RCON-Server_v1.0.x.zip` - same as the Client ZIP plus
+  `TESTPLAN_SERVER.md` and the `server-integration/` folder (SQL/extDB3/
+  SQF for MySQL Steam-ID resolution).
+- `RHD-RCON-Server_v1.0.x.exe` - the bare Server EXE if you just want a
+  quick update.
 
 **Verify the download** (recommended):
 
 ```powershell
-Get-FileHash RHD-RCON_v1.0.x.exe -Algorithm SHA256
+Get-FileHash RHD-RCON-Client_v1.0.x.exe -Algorithm SHA256
 ```
 
-Compare the result to the **contents** of the `RHD-RCON_v1.0.x.exe.sha256`
-file (open that file - it is plain text with the expected hash). Do not
-confuse this with the hash GitHub shows next to the `.sha256` file
-itself in the release list - that is the checksum of the text file, not
-its contents.
+Compare the result to the **contents** of the matching `.sha256` file
+(e.g. `RHD-RCON-Client_v1.0.x.exe.sha256` - open that file, it is plain
+text with the expected hash). Do not confuse this with the hash GitHub
+shows next to the `.sha256` file itself in the release list - that is
+the checksum of the text file, not its contents.
 
 ## Setup
 
 Full walkthrough in **[SETUP.md](SETUP.md)** (server-side prerequisites,
-modes, env vars, MySQL, Steam, IP ban).
+choosing Client vs. Server, env vars, MySQL, Steam, IP ban).
 
-After setup, [TESTPLAN.md](TESTPLAN.md) takes you through every feature
-step by step.
+After setup, [TESTPLAN_CLIENT.md](TESTPLAN_CLIENT.md) (and
+[TESTPLAN_SERVER.md](TESTPLAN_SERVER.md) if you run the Server EXE) takes
+you through every feature step by step.
 
 ## Privacy and data
 
@@ -264,10 +299,10 @@ step by step.
   builds the variable name from a fixed prefix (`RH_RCON_PASSWORD` /
   `RH_MYSQL_PASSWORD`) plus a per-server **suffix** you set in the
   Edit-Server dialog. Back up `resthirnrcon.db` freely.
-- Steam-ID lookups (server mode, when the MySQL provider is enabled on
+- Steam-ID lookups (Server EXE, when the MySQL provider is enabled on
   a server) go to your own MySQL database. Requires one-time server-side
   setup (MySQL table + SQF hook in `dayz_server.pbo`) - see
-  [SETUP.md](SETUP.md#a-steam-id-resolution-server-mode) for details.
+  [SETUP.md](SETUP.md#a-steam-id-resolution-server-exe-mysql-provider) for details.
 - Steam profile lookups (VAC/Game-Ban) call the official Steam Web API with
   your own API key. Get a free key at
   [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey),
