@@ -194,8 +194,10 @@ ban data come from a JSON export your server admin sends you.
    pulled in.
    `[x]` `[-]` `[?]`
    > Question:
-3. Optional: add your own **Steam Web API key** in Settings -> Steam to
-   do your own Steam profile refreshes.
+3. There is no Settings -> Steam tab in the Client EXE (no Steam Web API
+   key field, no own Steam profile refresh) - VAC/Game-Ban badges only
+   ever come from the imported data. Confirm the tab is genuinely absent,
+   not just empty.
    `[x]` `[-]` `[?]`
    > Question:
 
@@ -279,12 +281,12 @@ for the full configuration reference. Quick pointers for the Client EXE:
   or connect filters to run it), **Debug log** checkbox toggles file-only
   debug logging, theme.
 - **Geolocation** - export / import the IP->country cache.
-- **Steam** - your Steam Web API key (optional, for VAC / Game-Ban
-  lookups on imported players).
 
 Tabs that only exist in the Server EXE (Country Filter, Name Filter, IP
-Ban, Watchdog) simply are not part of the Client EXE - there is nothing
-to hide or reveal, they were never built in.
+Ban, Watchdog, **Steam**) simply are not part of the Client EXE - there
+is nothing to hide or reveal, they were never built in. VAC/Game-Ban data
+in the Client EXE only ever comes from an imported PlayerDB export (see
+4.4 above).
 
 > Note: the standalone "Debug log" tab from earlier versions has been
 > removed. Debug data is still written to

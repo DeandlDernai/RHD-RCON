@@ -394,14 +394,23 @@ above for the full field list).
 
 The tool only **reads** `player_login_log` - no write access required.
 
-### Steam tab
+### Steam tab *(Server EXE)*
 
 | Setting | What it does |
 |---|---|
 | **Steam Web API key** | Get one for free at [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey). Used for VAC and Game-Ban lookups. |
 
-Works in both EXEs. Steam Web API has a 100k calls/day quota, plenty for
-typical server sizes.
+This tab does not exist in the Client EXE - there is nothing to refresh
+against the Steam Web API there (SteamID resolution needs a server-side
+provider, which the Client EXE has none of). Steam Web API has a 100k
+calls/day quota, plenty for typical server sizes.
+
+**Client EXE and Steam data:** the Client EXE still *shows* SteamIDs and
+VAC/Game-Ban badges in the Player DB, but only for players a server admin
+already resolved - via the **PlayerDB Export** (Server EXE, Player DB tab)
+/ **Import** (both EXEs) round trip described in [4.4 in
+TESTPLAN_CLIENT.md](TESTPLAN_CLIENT.md). Without an import, the Steam-ID
+column simply stays empty; the app tells you so with an inline hint.
 
 ## Environment variables
 

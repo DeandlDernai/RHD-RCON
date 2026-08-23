@@ -100,7 +100,7 @@ walkthrough in [SETUP.md](SETUP.md).
 |---|---|
 | **RCon Host / Port** | The server admin (your `BEServer.cfg` `RConPort`) |
 | **RCon Password (env-var, since 1.0.4)** | The server admin (your `BEServer.cfg` `RConPassword`). Stored as an environment variable on **your PC**, never in `resthirnrcon.db`. The tool reads `RH_RCON_PASSWORD` plus a per-server **suffix** you set in the dialog (empty suffix = `RH_RCON_PASSWORD`, suffix `_S2` = `RH_RCON_PASSWORD_S2`, etc.) |
-| **Steam Web API key** (optional, for VAC / Game-Ban lookups) | [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey) |
+| **A PlayerDB export from a server admin** (optional, for VAC / Game-Ban badges) | The Client EXE has no Settings -> Steam tab (no Steam Web API key field) - it only *shows* SteamIDs and VAC/Game-Ban badges for players a Server EXE already resolved and exported. See [Import a PlayerDB JSON](TESTPLAN_CLIENT.md) below |
 
 **Server EXE** (you run RHD-RCON on your own server PC - see
 ["Client vs. Server"](#client-vs-server---which-one-do-i-need) above for
@@ -110,6 +110,7 @@ plus:
 | What | Where from |
 |---|---|
 | **Admin rights** on the server PC | Needed so the watchdog can launch the restart script (only if you use the watchdog feature) |
+| **Steam Web API key** (optional, for VAC / Game-Ban lookups) | [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey) - entered under Settings -> Steam, a tab that only exists in the Server EXE |
 | **MySQL credentials** (optional, for Steam-ID resolution) | Configured **per server** in the Add/Edit-Server dialog under "Steam-ID provider": Host / Port / Database / User. Password is read from an environment variable - the tool uses the prefix `RH_MYSQL_PASSWORD` and appends a per-server **suffix** you choose (e.g. suffix `_DE` -> env-var `RH_MYSQL_PASSWORD_DE`). Empty suffix = `RH_MYSQL_PASSWORD` (1.0.3 default). No secrets land in the DB |
 | **`player_login_log` table + SQF hook** (optional, only with MySQL provider) | See [server-integration/](server-integration/) - SQL schema, extDB3 block, SQF hook + step-by-step README. Also shipped in the release ZIP |
 
@@ -306,8 +307,10 @@ you through every feature step by step.
 - Steam profile lookups (VAC/Game-Ban) call the official Steam Web API with
   your own API key. Get a free key at
   [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey),
-  then enter it under Settings -> Steam (see
-  [SETUP.md](SETUP.md#steam-tab)).
+  then enter it under Settings -> Steam **in the Server EXE** (see
+  [SETUP.md](SETUP.md#steam-tab-server-exe)) - the Client EXE has no
+  Steam tab and never calls the Steam Web API itself; it only displays
+  Steam data a Server EXE already resolved and exported.
 - Geolocation lookups use [ip-api.com](https://ip-api.com) (free tier, 45
   requests/minute). Results are cached locally.
 - **Update check:** on every start the tool fetches a small `links.json`
