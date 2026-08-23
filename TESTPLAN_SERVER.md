@@ -1,13 +1,16 @@
-# Test Plan - Server Mode
+# Test Plan - Server EXE
 
-Workflow walkthrough for **server-mode admins** (RHD-RCON runs on the
+Workflow walkthrough for **Server-EXE admins** (RHD-RCON runs on the
 same Windows machine as your DayZ Epoch server, with the server process,
-restart scripts and optionally MySQL available locally).
+restart scripts and optionally MySQL available locally). See README
+["Client vs. Server"](README.md#client-vs-server---which-one-do-i-need)
+if you are not sure this is the right download for you.
 
-> **Prerequisite:** run through [TESTPLAN.md](TESTPLAN.md) first - it
-> covers everything that also exists in client mode (player list, kick,
-> ban, ban list, ban sync, player DB, scheduled chat messages, commands).
-> This plan only covers the **server-mode-only** features on top.
+> **Prerequisite:** run through [TESTPLAN_CLIENT.md](TESTPLAN_CLIENT.md)
+> first - it covers everything that also exists in the Client EXE (player
+> list, kick, ban, ban list, ban sync, player DB, scheduled chat messages,
+> commands). This plan only covers the **Server-EXE-only** features on
+> top.
 
 ## How to use this plan
 
@@ -24,28 +27,30 @@ step you mean. For `[-]` a short note plus a snippet from
 
 ## Prerequisites
 
-- TESTPLAN.md completed (you can connect, kick, ban, see players)
+- TESTPLAN_CLIENT.md completed (you can connect, kick, ban, see players)
+- `RHD-RCON-Server_v1.0.x.exe` downloaded (the Server EXE is a separate
+  binary from the Client EXE, not a mode you switch to inside one app)
 - RHD-RCON running **as Administrator** on the server PC (needed so the
   watchdog can start your restart script)
-- Server-mode active (first-run wizard set to **Server**, or switched
-  later in Settings)
+- You are the operator of this server PC: you can create/edit restart
+  scripts, set up scheduled tasks, and (if you use the `mysql` Steam-ID
+  provider or Reforger) reach the server's own database/log files. See
+  README ["Client vs. Server"](README.md#client-vs-server---which-one-do-i-need)
+  for the full requirement.
 
 ---
 
-## 1. Switching to server mode
+## 1. First start (Server EXE)
 
-If you started in client mode, switch first.
-
-### 1.1 Mode switch
-
-1. Settings -> **General** -> set mode to **Server**. Restart the tool
-   if prompted.
+1. Double-click `RHD-RCON-Server_v1.0.x.exe`. First-run wizard: Admin
+   name, theme. There is no mode picker - starting this EXE **is** the
+   server role.
    `[x]` `[-]` `[?]`
    > Question:
-2. After restart: Settings now shows the server-mode tabs (**Country
-   Filter**, **Name Filter**, **IP Ban**, server-side scheduler entries,
-   ...). The Add/Edit-Server dialog gains additional tabs (**Filters**,
-   **Steam-ID**, **Watchdog**) that are hidden in client mode.
+2. Main window shows the Server-EXE-only tabs (**Country Filter**, **Name
+   Filter**, **IP Ban**, server-side scheduler entries, ...) directly.
+   The Add/Edit-Server dialog has additional tabs (**Filters**,
+   **Steam-ID**, **Watchdog**) that do not exist at all in the Client EXE.
    `[x]` `[-]` `[?]`
    > Question:
 
@@ -53,7 +58,7 @@ If you started in client mode, switch first.
 
 ## 2. Player DB live writes
 
-In server mode the Player DB is populated automatically from the live
+In the Server EXE the Player DB is populated automatically from the live
 RCon feed (Verified GUID events on your servers).
 
 ### 2.1 Connect with active players
@@ -82,7 +87,7 @@ RCon feed (Verified GUID events on your servers).
 
 Requires the optional server-side integration (MySQL table
 `player_login_log`, extDB3 protocol, SQF hook). See
-[SETUP.md - Steam-ID resolution](SETUP.md#a-steam-id-resolution-server-mode).
+[SETUP.md - Steam-ID resolution](SETUP.md#a-steam-id-resolution-server-exe-mysql-provider).
 
 > Since 1.0.4 there is **no global MySQL tab in Settings**. The MySQL
 > provider is configured per server in the Add/Edit-Server dialog on the
@@ -352,7 +357,7 @@ Match is by GUID **OR** SteamID, so partial info is enough.
 
 A scheduled restart = scheduled shutdown (RHD-RCON does this) + restart
 trigger (your `.ps1` / `.bat` does this via the watchdog). See
-[SETUP.md - Scheduled server restarts](SETUP.md#b-scheduled-server-restarts-server-mode).
+[SETUP.md - Scheduled server restarts](SETUP.md#b-scheduled-server-restarts-server-exe).
 
 ### 9.1 Configure process + restart script
 

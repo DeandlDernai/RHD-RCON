@@ -1,7 +1,7 @@
 # Server-side integration for RHD-RCON
 
 This folder contains everything you need to enable **Steam-ID resolution**
-in RHD-RCON server mode. With these pieces deployed, your DayZ Epoch
+in the RHD-RCON Server EXE. With these pieces deployed, your DayZ Epoch
 server writes one row per player login into a MySQL table, and RHD-RCON
 reads that table to map BattlEye GUIDs to Steam-IDs (PlayerUID).
 
@@ -92,7 +92,7 @@ SELECT * FROM player_login_log ORDER BY LoginTime DESC LIMIT 10;
 
 If rows appear here, RHD-RCON can resolve Steam-IDs. Continue with
 **Settings -> MySQL** in the tool itself (see
-[SETUP.md](../SETUP.md#a-steam-id-resolution-server-mode) for the env
+[SETUP.md](../SETUP.md#a-steam-id-resolution-server-exe-mysql-provider) for the env
 var + connection setup).
 
 ## Troubleshooting

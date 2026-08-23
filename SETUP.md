@@ -17,34 +17,44 @@ RHD-RCON is a **Windows desktop application**. Specifically:
   (Avalonia / Direct2D) and needs the desktop graphics stack that Server
   Core does not ship. Microsoft no longer supports converting Server Core
   to / from Desktop Experience after install, so if you ended up on Server
-  Core you will need a fresh OS install - or run RHD-RCON in **client
-  mode** from a normal Windows PC against your game server's RCon port.
+  Core you will need a fresh OS install - or run the **Client EXE** instead
+  from a normal Windows PC against your game server's RCon port.
 - No additional .NET runtime is required - the EXE is self-contained.
 
-## Choosing a mode
+## Choosing your download
 
-RHD-RCON has two operating modes. Pick the one that matches your role:
+RHD-RCON ships as **two separate EXEs**. There is no in-app switch - the
+role follows from which EXE you download and run. Pick the one that
+matches your role:
 
-| Mode | Who is this for | What you get |
+| EXE | Who is this for | What you get |
 |---|---|---|
-| **Client mode** | You manage someone else's server. You have RCon password but no shell access to the server PC. | Live player list, kick/ban via RCon, ban list view, chat, theme. Multi-server ban sync and offline bans work. No scheduler, no process watchdog, no IP-ban enforcement, no player DB writes from live data. |
-| **Server mode** | You run your own server(s) and can install things on the server PC. | Everything client mode has, plus scheduler, server-process watchdog, IP-ban enforcement, persistent player DB writes from live data, MySQL Steam-ID lookups, PlayerDB export for client admins. |
+| **Client** (`RHD-RCON-Client_v1.0.x`) | You manage someone else's server. You have RCon password but no shell access to the server PC. | Live player list, kick/ban via RCon, ban list view, chat, theme. Multi-server ban sync and offline bans work. No scheduler, no process watchdog, no IP-ban enforcement, no player DB writes from live data. |
+| **Server** (`RHD-RCON-Server_v1.0.x`) | You **are** the operator of the server PC: you can install/configure things there (restart scripts, scheduled tasks) and reach its own data (MySQL Hive DB and/or BattlEye logs, if you use those features). | Everything the Client EXE has, plus scheduler, server-process watchdog, IP-ban enforcement, persistent player DB writes from live data, MySQL Steam-ID lookups, PlayerDB export for client admins. |
 
-Server mode unlocks every feature but requires a few one-time setup steps
-(env vars, optional MySQL table, optional SQF hook in `dayz_server.pbo`).
+> **Server EXE requirement, spelled out:** it is built to run *on the
+> server machine itself* (or at least somewhere with admin rights on it
+> and network access to its RCon/MySQL/log files) - it is not a
+> general-purpose "more powerful client". If you only have an RCon
+> password and no way to touch the server PC's filesystem, scheduled
+> tasks or database, the Client EXE is the one you want; the Server EXE's
+> extra features simply will not work for you without that access.
 
-## Quick start (client mode)
+The Server EXE unlocks every feature but requires a few one-time setup
+steps (env vars, optional MySQL table, optional SQF hook in
+`dayz_server.pbo`).
 
-1. Download `RHD-RCON_v1.0.x.zip` from the
+## Quick start (Client EXE)
+
+1. Download `RHD-RCON-Client_v1.0.x.zip` from the
    [Releases page](https://github.com/DeandlDernai/RHD-RCON/releases) -
-   contains the EXE plus all docs (README, SETUP, TESTPLAN,
-   TESTPLAN_SERVER, PLANNED). The bare EXE is also published separately
-   if you only want to update.
+   contains the EXE plus all docs (README, SETUP, TESTPLAN_CLIENT,
+   PLANNED). The bare EXE is also published separately if you only want
+   to update.
 2. Extract into a folder of your choice. A SQLite database file
    (`resthirnrcon.db`) and a `logs/` folder will be created next to the
    EXE on first run.
-3. Run the EXE. On first start a wizard asks for mode (pick **Client**),
-   admin name and theme.
+3. Run the EXE. On first start a wizard asks for admin name and theme.
 4. **Set the RCon password as an environment variable** (since 1.0.4 the
    tool reads it from the OS, never from the DB). Admin PowerShell:
    ```powershell
@@ -58,13 +68,13 @@ Server mode unlocks every feature but requires a few one-time setup steps
    `RH_RCON_PASSWORD`). Hit **Test connect**. Save.
 6. Done. Click the new server tab on the left to connect and start managing.
 
-## Quick start (server mode)
+## Quick start (Server EXE)
 
-Server mode on top of the client-mode steps:
+Download `RHD-RCON-Server_v1.0.x.zip` instead of the Client one - same
+steps 2-6 above, plus:
 
 1. Run the EXE **as Administrator** (needed for the restart scripts).
-2. First-run wizard: pick **Server**.
-3. Configure the **Steam-ID provider per server** (optional, only if
+2. Configure the **Steam-ID provider per server** (optional, only if
    you want Steam-ID resolution) in the Add/Edit-Server dialog. Three
    providers ship in 1.0.6:
    - **`none`** (default) - no Steam-ID lookup. Pick this for DayZ
@@ -83,7 +93,7 @@ Server mode on top of the client-mode steps:
      dialog (empty suffix = `RH_MYSQL_PASSWORD`, suffix `_DE` =
      `RH_MYSQL_PASSWORD_DE`, etc.). No password is ever stored in
      `resthirnrcon.db`.
-4. To make the `mysql` provider actually return Steam-IDs: install the
+3. To make the `mysql` provider actually return Steam-IDs: install the
    optional MySQL table + SQF hook on your DayZ server (see
    [Server-side prerequisites](#server-side-prerequisites) below).
 
@@ -101,7 +111,7 @@ password, open the server-edit dialog and fill in a suffix (e.g. `_DE`
 For most features RHD-RCON only needs the BattlEye RCon password. A few
 optional capabilities need server-side preparation:
 
-### A) Steam-ID resolution (server mode, `mysql` provider)
+### A) Steam-ID resolution (Server EXE, `mysql` provider)
 
 RHD-RCON resolves BattlEye GUIDs to Steam-IDs through a per-server
 **Steam-ID provider**. In 1.0.4 the only provider that hits a database
@@ -140,7 +150,7 @@ provider config blob, so you can point server A at DB `epoch_eu` and
 server B at DB `epoch_us` from the same RHD-RCON instance. No global
 config to clash on.
 
-### B) Scheduled server restarts (server mode)
+### B) Scheduled server restarts (Server EXE)
 
 A scheduled restart in RHD-RCON is actually a **scheduled shutdown plus
 a separate restart trigger**. The two halves:
@@ -169,13 +179,24 @@ it crashed), it runs your script. A 120s cooldown prevents restart loops.
 So you don't need a separate Windows Scheduled Task - the tool itself is
 the watchdog, you only supply the start script.
 
-### C) Connect filters (server mode)
+### C) Connect filters (Server EXE)
 
 Two independent connect-time filters were added in 1.0.5. Both are
 **off-server-by-default-on** (the global filter is enabled, and every
 server has its individual on/off toggle on by default). The kick happens
 on the next refresh tick after the player passed BattlEye verification,
 so the player briefly shows up in the live list before being kicked.
+
+> **What the country filter is for:** curating who plays on your server
+> for legitimate reasons - matching your community's language, keeping
+> admin coverage within your team's timezone, meeting a hosting
+> jurisdiction's requirements, or just keeping a whitelisted/invite-only
+> server closed to the public. It is not meant as a tool to exclude
+> people by nationality for its own sake. Put the actual reason (and, if
+> you run one, a link/instruction for requesting whitelist access) in
+> the **kick message** so kicked players know why and what to do next -
+> see [Whitelist](#whitelist-server-exe) below for adding individual
+> exceptions.
 
 **Country filter:**
 
@@ -187,7 +208,7 @@ so the player briefly shows up in the live list before being kicked.
   global message; if the global is also blank, the filter only logs
   and does not kick).
 - **Whitelist bypass:** whitelisted GUIDs / SteamIDs are skipped by
-  the country filter. See [Whitelist](#whitelist-server-mode).
+  the country filter. See [Whitelist](#whitelist-server-exe).
 - Audit: every kick lands in `player_change_log` as `Country-Kick`
   with detail `Country: XX | Mode: yy | Liste: ...`. Visible in the
   Player Log -> Actions tab.
@@ -210,7 +231,7 @@ so the player briefly shows up in the live list before being kicked.
 - Audit: `Name-Kick` with `Reason: cyrillic` / `asian` / `arabic` /
   `hebrew` / `non-latin` / `too-many-symbols` / `pattern '...'`.
 
-### Whitelist (server mode)
+### Whitelist (Server EXE)
 
 The whitelist protects individual players from the **country filter**
 (not from the name filter). Match is by GUID **OR** SteamID, so an
@@ -241,9 +262,9 @@ the audit log is GUID-keyed).
   is out, you add its mod ID to `game.mods` in `config.json`, restart,
   and check for `[RHD_Rcon] Login-Logger` in the server log. Until then,
   Reforger servers run without Steam-ID resolution and without chat.
-- **Player IP + country flag:** no mod needed, but RHD-RCON must run in
-  server mode with read access to the BattlEye log folder of the server
-  instance. The tool picks the newest `logs_*` folder and only tails the
+- **Player IP + country flag:** no mod needed, but this needs the Server
+  EXE (running with read access to the BattlEye log folder of the server
+  instance). The tool picks the newest `logs_*` folder and only tails the
   last 256 KB of `console.log`, so big logs stay cheap.
 
 ## Configuration reference
@@ -269,24 +290,24 @@ The **Debug log** checkbox toggles writes to
 tab from earlier versions has been removed - the file is still written
 when the checkbox is on.
 
-The **Ban sync time** *(server mode)* sets when the daily background
+The **Ban sync time** *(Server EXE)* sets when the daily background
 ban-status sync between RHD-RCON DB and BattlEye `bans.txt` runs.
 Default 04:00. If your tool is offline at that time, the sync is missed
-for that day - this only matters in server mode, where the tool is
-typically running 24/7 on the server PC.
+for that day - this only matters for the Server EXE, which is typically
+running 24/7 on the server PC.
 
 ### Server tab (per-server)
 
 Since 1.0.5 the Add/Edit-Server dialog is split into tabs to keep
 related settings together:
 
-| Dialog tab | Modes | Contains |
+| Dialog tab | Available in | Contains |
 |---|---|---|
-| **Connection** | both | Name, Host, Port, RCon env-var suffix, Tab color |
-| **Behavior** | both | Auto refresh, Chat log path, Auto-connect at startup |
-| **Filters** | server | Country filter on/off + kick message, Name filter on/off + kick message |
-| **Steam-ID** | server | Provider (`none` / `mysql`), MySQL Host / Port / Database / User, MySQL password env-var suffix, **Copy provider config from another server** |
-| **Watchdog** | server | ServerProcessName, RestartScriptPath, Process monitor active toggle |
+| **Connection** | both EXEs | Name, Host, Port, RCon env-var suffix, Tab color |
+| **Behavior** | both EXEs | Auto refresh, Chat log path, Auto-connect at startup |
+| **Filters** | Server EXE only | Country filter on/off + kick message, Name filter on/off + kick message |
+| **Steam-ID** | Server EXE only | Provider (`none` / `mysql`), MySQL Host / Port / Database / User, MySQL password env-var suffix, **Copy provider config from another server** |
+| **Watchdog** | Server EXE only | ServerProcessName, RestartScriptPath, Process monitor active toggle |
 
 Fields are self-explanatory. A few things worth knowing:
 
@@ -324,7 +345,7 @@ Fields are self-explanatory. A few things worth knowing:
     is copied over. Handy when you run several servers against the
     same DB.
 
-### Country Filter tab *(server mode)*
+### Country Filter tab *(Server EXE)*
 
 | Setting | What it does |
 |---|---|
@@ -333,10 +354,10 @@ Fields are self-explanatory. A few things worth knowing:
 | **Global kick message** | Default kick message (max 120 chars). Each server can override it on the **Filters** tab of its Edit dialog. |
 | **Add whitelist entry...** | Shortcut to the whitelist-entry dialog (empty). Whitelisted players bypass this filter (match by GUID or SteamID). |
 
-See [C) Connect filters](#c-connect-filters-server-mode) above for the
+See [C) Connect filters](#c-connect-filters-server-exe) above for the
 per-server toggle, audit-log behavior and live-reload semantics.
 
-### Name Filter tab *(server mode)*
+### Name Filter tab *(Server EXE)*
 
 | Setting | What it does |
 |---|---|
@@ -348,7 +369,7 @@ per-server toggle, audit-log behavior and live-reload semantics.
 > Whitelisted players **still get kicked** by the name filter. The name
 > filter is absolute - even admins must have readable names.
 
-### IP Ban tab *(server mode)*
+### IP Ban tab *(Server EXE)*
 
 | Setting | What it does |
 |---|---|
@@ -375,7 +396,7 @@ ban can also be enforced at the OS level. Not implemented yet - see
 - **Export / Import** as SQL file - useful for handing off your already-built
   geolocation cache to client admins so they do not have to hit the API.
 
-### MySQL configuration *(server mode, per server)*
+### MySQL configuration *(Server EXE, per server)*
 
 There is no global MySQL tab in Settings since 1.0.4. MySQL is
 configured per server in the Add/Edit-Server dialog under
@@ -384,14 +405,23 @@ above for the full field list).
 
 The tool only **reads** `player_login_log` - no write access required.
 
-### Steam tab
+### Steam tab *(Server EXE)*
 
 | Setting | What it does |
 |---|---|
 | **Steam Web API key** | Get one for free at [steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey). Used for VAC and Game-Ban lookups. |
 
-Works in both modes. Steam Web API has a 100k calls/day quota, plenty for
-typical server sizes.
+This tab does not exist in the Client EXE - there is nothing to refresh
+against the Steam Web API there (SteamID resolution needs a server-side
+provider, which the Client EXE has none of). Steam Web API has a 100k
+calls/day quota, plenty for typical server sizes.
+
+**Client EXE and Steam data:** the Client EXE still *shows* SteamIDs and
+VAC/Game-Ban badges in the Player DB, but only for players a server admin
+already resolved - via the **PlayerDB Export** (Server EXE, Player DB tab)
+/ **Import** (both EXEs) round trip described in [4.4 in
+TESTPLAN_CLIENT.md](TESTPLAN_CLIENT.md). Without an import, the Steam-ID
+column simply stays empty; the app tells you so with an inline hint.
 
 ## Environment variables
 
@@ -403,7 +433,7 @@ enter in the Edit-Server dialog. Two prefixes exist:
 | Prefix | Used for | Required when |
 |---|---|---|
 | `RH_RCON_PASSWORD` | BattlEye RCon password | Always (any server you want to connect to) |
-| `RH_MYSQL_PASSWORD` | MySQL provider password | Only if a server uses the `mysql` Steam-ID provider (server mode) |
+| `RH_MYSQL_PASSWORD` | MySQL provider password | Only if a server uses the `mysql` Steam-ID provider (Server EXE) |
 
 The suffix can be empty (then the bare prefix is read). Examples:
 
@@ -452,6 +482,31 @@ and cannot be recovered. You need to:
 
 The MySQL provider was already env-var-based in 1.0.3, so the MySQL
 side does not change.
+
+### Upgrading from 1.0.6 or earlier (two EXEs since 1.0.7)
+
+Through 1.0.6 there was one combined EXE with a Client/Server toggle in
+Settings (and a mode step in the first-run wizard). Since 1.0.7 that EXE
+is replaced by two separate downloads - `RHD-RCON-Client_v1.0.x.exe` and
+`RHD-RCON-Server_v1.0.x.exe` - see [Choosing your
+download](#choosing-your-download) above. There is no more in-app switch.
+
+1. Stop the old combined EXE.
+2. Download whichever new EXE matches how you were already running it -
+   Client if you had "Client mode" selected, Server if you had "Server
+   mode" selected.
+3. Put the new EXE in the same folder as your existing `resthirnrcon.db`
+   and `logs/`. The database schema is unchanged by the split, so the
+   new EXE picks up your servers, player DB, bans and settings as-is -
+   **no migration tool, no export/import needed.**
+4. If you use scheduled tasks / auto-logon to launch the old EXE, point
+   them at the new one.
+5. Delete the old combined EXE once you have confirmed the new one
+   connects and shows your existing data.
+
+If you were running one instance in Client mode and a separate instance
+in Server mode from two different folders, just replace each folder's
+EXE with the matching new one - same rule, no cross-folder changes needed.
 
 ## Running the tool
 
