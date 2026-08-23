@@ -187,6 +187,17 @@ server has its individual on/off toggle on by default). The kick happens
 on the next refresh tick after the player passed BattlEye verification,
 so the player briefly shows up in the live list before being kicked.
 
+> **What the country filter is for:** curating who plays on your server
+> for legitimate reasons - matching your community's language, keeping
+> admin coverage within your team's timezone, meeting a hosting
+> jurisdiction's requirements, or just keeping a whitelisted/invite-only
+> server closed to the public. It is not meant as a tool to exclude
+> people by nationality for its own sake. Put the actual reason (and, if
+> you run one, a link/instruction for requesting whitelist access) in
+> the **kick message** so kicked players know why and what to do next -
+> see [Whitelist](#whitelist-server-exe) below for adding individual
+> exceptions.
+
 **Country filter:**
 
 - Global config: Settings -> **Country Filter** -> Mode (`off` /

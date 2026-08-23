@@ -125,8 +125,13 @@ plus:
   log per player. Audit entries for connect-filter kicks (Country-Kick /
   Name-Kick) and whitelist add/remove show up in the player action log.
 - **Connect filters** (Server EXE only, since 1.0.5):
-  - **Country filter** - allow- or blocklist of ISO country codes, kicks
-    on connect with a configurable per-server message.
+  - **Country filter** - allow- or blocklist of ISO country codes for
+    curating who plays on your server (community language, admin-team
+    timezone, whitelisted-server setups), with a configurable per-server
+    kick message you can use to explain why and point kicked players at
+    your whitelist process instead of just turning them away. See
+    SETUP.md ["Connect filters"](SETUP.md#c-connect-filters-server-exe)
+    for the full picture of what it is and is not for.
   - **Name filter** - allowed Unicode block (Ascii / Latin /
     LatinCyrillic / Any), max special-char ratio, and a forbidden
     substring pattern list (e.g. `admin,discord.gg`). Kicks unlesbare
