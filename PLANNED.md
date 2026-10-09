@@ -32,11 +32,15 @@
   is written immediately on ban-add or only when the player actually tries
   to connect.
 
-### ISP ban (Internet Service Provider)
-- Kick (or optionally ban) players based on their internet service
-  provider. Useful for cutting off VPN / hosting / proxy networks that
-  are commonly abused by ban evaders. Off by default; configurable
-  provider list per server.
+### ISP filter (Internet Service Provider)
+- **Shipped in 1.0.8** (Server EXE): auto-kick players whose internet
+  provider matches a blocklist pattern. Useful for cutting off VPN /
+  hosting / proxy networks commonly abused by ban evaders. The provider
+  name is resolved via ip-api.com. Global master switch (off by default)
+  plus a per-server toggle; the blocklist is managed in Settings ->
+  ISP Filter, matching is a case-insensitive substring ("M247" catches
+  "M247 Europe SRL"). Whitelisted players are never kicked. Persistent
+  bans based on ISP are not included - kick only.
 
 ### Other
 - Player DB / ban list export beyond the current PlayerDB JSON.
