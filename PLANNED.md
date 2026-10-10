@@ -36,11 +36,18 @@
 - **Shipped in 1.0.8** (Server EXE): auto-kick players whose internet
   provider matches a blocklist pattern. Useful for cutting off VPN /
   hosting / proxy networks commonly abused by ban evaders. The provider
-  name is resolved via ip-api.com. Global master switch (off by default)
-  plus a per-server toggle; the blocklist is managed in Settings ->
-  ISP Filter, matching is a case-insensitive substring ("M247" catches
+  name is resolved via ip-api.com and shown in its own "ISP" column;
+  right-click "Block ISP..." adds it to the blocklist. The blocklist and
+  the kick message are managed in Settings -> ISP Filter, the filter is
+  switched on per server (Server edit -> Filters, off for new servers).
+  Matching is a case-insensitive substring ("M247" catches
   "M247 Europe SRL"). Whitelisted players are never kicked. Persistent
   bans based on ISP are not included - kick only.
+
+### Admin audit log
+- **Coming in 1.0.9** (Server EXE): a tab that shows what other RCon
+  connections (e.g. a Client-EXE admin) do on your servers - kicks,
+  bans, chat broadcasts, RCon logins and ban list changes.
 
 ### Other
 - Player DB / ban list export beyond the current PlayerDB JSON.
