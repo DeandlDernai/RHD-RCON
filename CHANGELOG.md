@@ -4,6 +4,67 @@ All notable changes to RHD-RCON are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 uses semantic-ish versioning (`major.minor.patch`).
 
+## 1.0.9 - 2026-10-11
+
+### Added
+
+- **Admin Audit Log tab (Server EXE).** Overview of what other RCon
+  connections to your server have triggered - kicks, bans, chat broadcasts,
+  logins and ban list changes. Filterable (player/admin/text/server), 7 days
+  of history.
+
+### Changed
+
+- **Global Tasks now refresh environment variables from the registry before
+  each run**, instead of only using the ones present when RHD-RCON itself was
+  started. A variable added later (e.g. a webhook URL) now works on the next
+  scheduled run without restarting the tool.
+
+## 1.0.8 - 2026-10-09
+
+### Added
+
+- **ISP filter.** Auto-kick players whose resolved internet provider (via
+  ip-api.com) matches a blocklist pattern - useful against VPN/hosting/proxy
+  ban evasion. Managed globally in Settings -> ISP Filter; a "Block ISP..."
+  right-click action is available from the Players tab / Player DB, which
+  also now show the resolved ISP as its own column. Kick only, no persistent
+  ban; whitelisted players are exempt.
+- **"No admin" badge + one-click elevated restart (Server EXE).** If the
+  Server EXE isn't running as Administrator (needed for restart scripts), a
+  dismissible hint with a one-click "Restart as Administrator" option appears
+  before background services start; a persistent badge stays visible until
+  fixed.
+- Auto-kick reason (which filter, which rule matched) is now logged directly
+  in the server tab's log.
+
+### Changed
+
+- **Country/Name/ISP filter kick message is now configured once, globally**
+  (Settings, required field with a sensible default) instead of per server.
+  Each server keeps an optional override. Country filter mode is always
+  allow/block now (the old "off" state is gone - an empty list already means
+  nobody gets kicked); each filter is still switched on/off per server, with
+  all three off by default on new servers.
+- Geolocation seed data updated to the 2026-10-01 IP2Location snapshot;
+  future updates are now a single scripted step.
+
+### Fixed
+
+- **Server EXE could silently stop logging (and responding) after
+  midnight.** A locking issue in the debug-log writer could freeze all
+  server sessions right at the daily log rollover. Logging now runs fully
+  decoupled from connection handling, so a slow/blocked log write can never
+  stall the app.
+- **Umlauts (ä/ö/ü/ß) in server chat** were replaced with a placeholder
+  character when echoed back from the game server - for scheduled messages,
+  broadcasts and the admin-chat log. Send and read paths now use the correct
+  encoding per game (Latin-1 for Arma 2, UTF-8 for Reforger). Arma 2's own
+  kick/disconnect screen still drops umlauts in kick reasons - an engine
+  limitation.
+- Live MySQL Steam-ID provider changes and the Reforger ban/kick dialogs
+  showing the player's UUID.
+
 ## 1.0.7 - 2026-08-23
 
 ### Changed
